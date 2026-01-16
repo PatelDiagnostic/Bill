@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patel Diagnostic - Final Integrated System</title>
+    <title>Patel Diagnostic - Final System</title>
     <style>
         @page { size: A5; margin: 5mm; }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; }
-        .invoice-card { width: 148mm; min-height: 210mm; background: white; margin: 10px auto; padding: 15px; box-sizing: border-box; border: 1px solid #ccc; position: relative; }
+        .invoice-card { width: 148mm; min-height: 210mm; background: white; margin: 10px auto; padding: 15px; box-sizing: border-box; border: 1px solid #ccc; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
+        /* Header */
         .header { text-align: center; border-bottom: 2px solid #b71c1c; margin-bottom: 10px; padding-bottom: 5px; }
         .header h1 { margin: 0; font-size: 22px; color: #b71c1c; }
         .header p { margin: 3px 0; font-size: 11px; font-weight: bold; }
 
         .meta-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         
+        /* Patient Details */
         .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 15px; }
         .patient-grid div { display: flex; align-items: center; border-bottom: 1px solid #ddd; }
         .patient-grid label { font-weight: bold; width: 85px; color: #555; }
-        .patient-grid input { border: none; outline: none; width: 100%; padding: 3px; font-size: 12px; }
+        .patient-grid input { border: none; outline: none; width: 100%; padding: 3px; font-size: 12px; background: transparent; }
 
-        /* Integrated Search Section */
+        /* Search Section */
         .search-area { background: #e8f5e9; padding: 10px; border: 1px solid #4CAF50; border-radius: 4px; margin-bottom: 10px; position: relative; }
         .search-flex { display: flex; gap: 6px; }
         .search-bar { flex: 2; padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 13px; }
@@ -31,25 +33,30 @@
         .drop-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 12px; display: flex; justify-content: space-between; }
         .drop-item:hover { background-color: #f1f1f1; }
 
+        /* Table */
         .invoice-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; }
         .invoice-table th { background-color: #4CAF50; color: white; padding: 8px; text-align: left; }
         .invoice-table td { padding: 8px; border-bottom: 1px solid #ddd; }
         
+        /* Calculation */
         .calc-box { border-top: 2px solid #4CAF50; padding-top: 10px; }
         .calc-row { display: flex; justify-content: flex-end; margin-bottom: 4px; font-size: 13px; align-items: center; }
         .calc-label { font-weight: bold; width: 120px; text-align: right; margin-right: 15px; }
         .calc-val { width: 80px; text-align: right; font-weight: bold; }
         .disc-input { width: 75px; text-align: right; border: 1px solid #ccc; padding: 4px; border-radius: 3px; font-weight: bold; }
 
+        /* Buttons */
+        .no-print { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .action-btn { padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; font-size: 12px; }
+        .btn-blue { background: #007bff; }
+        .btn-green { background: #25d366; }
+        .btn-del { color: #d32f2f; cursor: pointer; font-weight: bold; }
+
+        /* History */
         .history-section { margin-top: 20px; border-top: 2px dashed #007bff; padding-top: 10px; }
         .hist-search { width: 100%; padding: 8px; border: 1px solid #007bff; border-radius: 4px; font-size: 12px; margin-bottom: 5px; }
         #histResults { max-height: 100px; overflow-y: auto; background: white; border: 1px solid #eee; font-size: 11px; }
         .hist-item { padding: 6px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; cursor: pointer; }
-
-        .no-print { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
-        .action-btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-blue { background: #007bff; }
-        .btn-del { color: #d32f2f; cursor: pointer; font-weight: bold; }
 
         @media print {
             .no-print, .search-area, .history-section, .btn-del { display: none !important; }
@@ -59,9 +66,9 @@
         }
     </style>
 </head>
-<body onload="loadData()">
+<body onload="init()">
 
-<div class="invoice-card">
+<div class="invoice-card" id="invoice">
     <div class="header">
         <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
         <p>Titaradi, Udaipur | Contact: 8209746239</p>
@@ -73,20 +80,19 @@
     </div>
 
     <div class="patient-grid">
-        <div><label>Name*:</label><input type="text" id="pName" placeholder="Patient Name"></div>
-        <div><label>Age/Sex*:</label><input type="text" id="pAge" placeholder="30/M"></div>
+        <div><label>Name*:</label><input type="text" id="pName"></div>
+        <div><label>Age/Sex*:</label><input type="text" id="pAge"></div>
         <div><label>Mobile:</label><input type="text" id="pMob"></div>
         <div><label>Ref. By:</label><input type="text" id="pRef" value="Self"></div>
     </div>
 
     <div class="search-area no-print">
         <div class="search-flex">
-            <input type="text" id="sInput" class="search-bar" placeholder="🔍 Search from Excel or type manual name..." onkeyup="liveSearch()">
+            <input type="text" id="sInput" class="search-bar" placeholder="Search Test or Type Manual Name..." onkeyup="doSearch()">
             <input type="number" id="mPrice" class="price-box" placeholder="₹ Price">
             <button class="btn-add" onclick="addManual()">ADD</button>
         </div>
         <div id="dropdown"></div>
-        <div id="status" style="font-size: 10px; margin-top: 5px; color: green; font-weight: bold;">Sheet Syncing...</div>
     </div>
 
     <table class="invoice-table">
@@ -116,97 +122,79 @@
     </div>
 
     <div class="no-print">
-        <button class="action-btn btn-blue" onclick="saveAndPrint()">PRINT & SAVE BILL</button>
+        <button class="action-btn btn-blue" onclick="saveAndPrint()">PRINT & SAVE</button>
+        <button class="action-btn btn-green" onclick="shareWA()">SHARE ON WHATSAPP</button>
     </div>
 
     <div class="history-section no-print">
-        <div style="font-size: 12px; font-weight: bold; color: #007bff; margin-bottom: 5px;">🔍 Search Old Bills</div>
-        <input type="text" class="hist-search" id="hInput" placeholder="Search by Name, Mobile or Inv No..." onkeyup="searchHistory()">
+        <div style="font-size: 12px; font-weight: bold; color: #007bff;">🔍 Search History (Name/Mobile)</div>
+        <input type="text" class="hist-search" id="hInput" placeholder="Search old bills..." onkeyup="findHistory()">
         <div id="histResults"></div>
     </div>
 </div>
 
-<script>
-    let masterList = [];
-    let activeItems = [];
-    
-    // Auto Serial & History
-    let nextInv = localStorage.getItem('patel_inv_id') || 20260001;
-    let billHistory = JSON.parse(localStorage.getItem('patel_history')) || [];
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    async function loadData() {
-        document.getElementById('invNum').innerText = nextInv;
-        
-        // THE MAGIC LINK: This converts your sheet to a format the browser can read instantly
-        const sheetId = '1ssyQG81ds_9ZAAXoF9AUUK4bdOxR_exV2BqMpqxEOvU';
-        const magicLink = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
+<script>
+    let masterData = [];
+    let billItems = [];
+    let invNo = localStorage.getItem('p_inv_id') || 20260001;
+    let history = JSON.parse(localStorage.getItem('p_history')) || [];
+
+    async function init() {
+        document.getElementById('invNum').innerText = invNo;
+        // Updated search link to your requested sheet
+        const sheetId = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
+        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
 
         try {
-            const res = await fetch(magicLink);
+            const res = await fetch(url);
             const csv = await res.text();
-            
-            // Parsing the CSV data
             const rows = csv.split('\n').slice(1);
-            masterList = rows.map(r => {
-                const cols = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return {
-                    name: cols[1]?.replace(/"/g,'').trim(),
-                    price: parseInt(cols[2]?.replace(/"/g,'')) || 0
-                };
-            }).filter(x => x.name);
-
-            document.getElementById('status').innerText = `✅ Success: ${masterList.length} tests loaded.`;
-        } catch (e) {
-            document.getElementById('status').innerText = "❌ Connection Failed! (Check Sheet Sharing)";
-            document.getElementById('status').style.color = "red";
-        }
+            masterData = rows.map(r => {
+                const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return { n: c[1]?.replace(/"/g,''), p: parseInt(c[2]?.replace(/"/g,'')) || 0 };
+            }).filter(x => x.n);
+        } catch(e) { console.error("Database offline"); }
 
         setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
     }
 
-    function liveSearch() {
+    function doSearch() {
         const q = document.getElementById('sInput').value.toLowerCase();
         const d = document.getElementById('dropdown');
         d.innerHTML = '';
         if(!q) { d.style.display = 'none'; return; }
-        
-        const matches = masterList.filter(x => x.name.toLowerCase().includes(q));
-        matches.slice(0, 10).forEach(m => {
+        masterData.filter(x => x.n.toLowerCase().includes(q)).slice(0,10).forEach(m => {
             const div = document.createElement('div');
             div.className = 'drop-item';
-            div.innerHTML = `<span>${m.name}</span> <b>₹${m.price}</b>`;
-            div.onclick = () => { addItem(m.name, m.price); d.style.display='none'; document.getElementById('sInput').value=''; };
+            div.innerHTML = `<span>${m.n}</span> <b>₹${m.p}</b>`;
+            div.onclick = () => { addItem(m.n, m.p); d.style.display='none'; document.getElementById('sInput').value=''; };
             d.appendChild(div);
         });
-        d.style.display = matches.length ? 'block' : 'none';
+        d.style.display = 'block';
     }
 
     function addManual() {
         const n = document.getElementById('sInput').value;
         const p = document.getElementById('mPrice').value;
-        if(n && p) {
-            addItem(n, parseInt(p));
-            document.getElementById('sInput').value = '';
-            document.getElementById('mPrice').value = '';
-        } else {
-            alert("Please enter both Test Name and Price");
-        }
+        if(n && p) { addItem(n, parseInt(p)); document.getElementById('sInput').value=''; document.getElementById('mPrice').value=''; }
     }
 
     function addItem(n, p) {
-        activeItems.push({n, p});
-        renderBill();
+        billItems.push({n, p});
+        renderTable();
     }
 
-    function renderBill() {
-        const b = document.getElementById('billBody');
-        b.innerHTML = '';
-        let sub = 0;
-        activeItems.forEach((item, i) => {
-            sub += item.p;
-            b.innerHTML += `<tr><td>${item.n}</td><td style="text-align:right">${item.p}</td><td class="no-print btn-del" onclick="activeItems.splice(${i},1);renderBill()">✖</td></tr>`;
+    function renderTable() {
+        const body = document.getElementById('billBody');
+        body.innerHTML = '';
+        let s = 0;
+        billItems.forEach((item, i) => {
+            s += item.p;
+            body.innerHTML += `<tr><td>${item.n}</td><td style="text-align:right">${item.p}</td><td class="no-print btn-del" onclick="billItems.splice(${i},1);renderTable()">✖</td></tr>`;
         });
-        document.getElementById('subTotal').innerText = sub;
+        document.getElementById('subTotal').innerText = s;
         updateTotal();
     }
 
@@ -218,33 +206,46 @@
 
     function saveAndPrint() {
         const name = document.getElementById('pName').value;
-        if(!name) return alert("Patient Name is Required");
+        if(!name) return alert("Enter Patient Name");
 
         const bill = {
-            id: nextInv,
+            id: invNo,
             name: name,
             mob: document.getElementById('pMob').value,
             date: new Date().toLocaleDateString(),
             total: document.getElementById('netTotal').innerText,
-            tests: activeItems.map(x => x.n).join(", ")
+            tests: billItems.map(x => x.n).join(", ")
         };
-        
-        billHistory.push(bill);
-        localStorage.setItem('patel_history', JSON.stringify(billHistory));
+        history.push(bill);
+        localStorage.setItem('p_history', JSON.stringify(history));
 
         window.print();
-        
-        localStorage.setItem('patel_inv_id', parseInt(nextInv) + 1);
+        localStorage.setItem('p_inv_id', parseInt(invNo) + 1);
         location.reload();
     }
 
-    function searchHistory() {
+    function shareWA() {
+        const name = document.getElementById('pName').value;
+        const mob = document.getElementById('pMob').value;
+        const total = document.getElementById('netTotal').innerText;
+        
+        // Generate PDF first
+        const element = document.getElementById('invoice');
+        const opt = { margin: 10, filename: `Bill_${name}.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a5', orientation: 'portrait' } };
+        
+        html2pdf().from(element).set(opt).save();
+
+        // Open WhatsApp text
+        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInv No: ${invNo}%0APatient: ${name}%0ATotal: ₹${total}%0A_Please attach the downloaded PDF invoice below._`;
+        window.open(`https://wa.me/91${mob}?text=${text}`, '_blank');
+    }
+
+    function findHistory() {
         const q = document.getElementById('hInput').value.toLowerCase();
         const r = document.getElementById('histResults');
         r.innerHTML = '';
         if(!q) return;
-        
-        billHistory.filter(b => b.name.toLowerCase().includes(q) || b.mob.includes(q) || b.id.toString().includes(q)).reverse().forEach(b => {
+        history.filter(b => b.name.toLowerCase().includes(q) || b.mob.includes(q)).reverse().forEach(b => {
             const div = document.createElement('div');
             div.className = 'hist-item';
             div.innerHTML = `<span>#${b.id} | ${b.name}</span> <b>₹${b.total}</b>`;
