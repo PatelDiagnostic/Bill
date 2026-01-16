@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patel Diagnostic Udaipur - Final Invoice</title>
+    <style>
+        @page { size: A5; margin: 5mm; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f4; }
+        .invoice-card { width: 148mm; min-height: 210mm; background: white; margin: 10px auto; padding: 15px; box-sizing: border-box; border: 1px solid #ccc; position: relative; }
+
+        /* Header */
+        .header { text-align: center; border-bottom: 2px solid #333; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 22px; color: #b71c1c; }
+        .header p { margin: 4px 0; font-size: 11px; font-weight: bold; }
+
+        .meta-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        
+        /* Patient Details */
+        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 15px; }
+        .patient-grid div { display: flex; align-items: center; border-bottom: 1px solid #ddd; }
+        .patient-grid label { font-weight: bold; width: 80px; color: #555; }
+        .patient-grid input { border: none; outline: none; width: 100%; padding: 2px; font-size: 12px; background: transparent; }
+
+        /* Search System */
+        .search-container { background: #e8f5e9; padding: 8px; border: 1px solid #4CAF50; border-radius: 4px; margin-bottom: 10px; position: relative; }
+        .search-bar { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; font-size: 13px; }
+        #status-indicator { font-size: 9px; color: #2e7d32; margin-top: 4px; font-weight: bold; }
+        
+        #dropdown { position: absolute; width: calc(100% - 16px); background: white; border: 1px solid #ccc; z-index: 100; max-height: 180px; overflow-y: auto; display: none; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .drop-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 12px; display: flex; justify-content: space-between; }
+        .drop-item:hover { background-color: #f1f1f1; }
+
+        /* Invoice Table */
+        .invoice-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .invoice-table th { background-color: #4CAF50; color: white; padding: 8px; text-align: left; }
+        .invoice-table td { padding: 8px; border-bottom: 1px solid #ddd; }
+        
+        /* Bottom Calculation Section */
+        .calc-section { margin-top: 15px; border-top: 2px solid #4CAF50; padding-top: 10px; font-size: 13px; }
+        .calc-row { display: flex; justify-content: flex-end; margin-bottom: 5px; align-items: center; }
+        .calc-label { font-weight: bold; width: 120px; text-align: right; margin-right: 15px; }
+        .calc-value { width: 80px; text-align: right; font-weight: bold; }
+        .discount-input { width: 70px; border: 1px solid #ccc; border-radius: 3px; padding: 4px; text-align: right; font-size: 13px; font-weight: bold; }
+
+        .final-total-row { color: #b71c1c; font-size: 18px; margin-top: 8px; border-top: 1px double #333; padding-top: 5px; }
+        
+        /* Buttons */
+        .no-print { display: flex; justify-content: center; gap: 10px; margin-top: 20px; }
+        button.btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
+        .btn-print { background: #007bff; }
+        .btn-wa { background: #25d366; }
+        .btn-del { color: red; cursor: pointer; font-weight: bold; }
+
+        @media print {
+            .no-print, .search-container, .btn-del { display: none !important; }
+            .discount-input { border: none !important; background: transparent !important; pointer-events: none; }
+            body { background: white; }
+            .invoice-card { border: none; box-shadow: none; margin: 0; width: 100%; }
+        }
+    </style>
+</head>
+<body onload="fetchExcelData()">
+
+<div class="invoice-card">
+    <div class="header">
+        <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
+        <p>Address-Titaradi, Udaipur | Contact-8209746239</p>
+    </div>
+
+    <div class="meta-row">
+        <div>Inv No: <b id="invNumDisplay">20260001</b></div>
+        <div id="liveClock"></div>
+    </div>
+
+    <div class="patient-grid">
+        <div><label>Name*:</label><input type="text" id="pName" placeholder="Patient Name"></div>
+        <div><label>Age/Sex*:</label><input type="text" id="pAge" placeholder="e.g. 28/M"></div>
+        <div><label>Contact:</label><input type="text" id="pContact"></div>
+        <div><label>Ref. By:</label><input type="text" id="pRef" value="Self"></div>
+    </div>
+
+    <div class="search-container no-print">
+        <input type="text" id="testSearch" class="search-bar" placeholder="🔍 Search by Code or Name from Excel..." onkeyup="filterTests()">
+        <div id="status-indicator">Connecting to Google Sheets...</div>
+        <div id="dropdown"></div>
+    </div>
+
+    <table class="invoice-table">
+        <thead>
+            <tr>
+                <th style="width: 15%;">Code</th>
+                <th style="width: 65%;">Test Description</th>
+                <th style="width: 20%; text-align: right;">Price (₹)</th>
+                <th class="no-print" style="width: 5%;"></th>
+            </tr>
+        </thead>
+        <tbody id="billBody"></tbody>
+    </table>
+
+    <div class="calc-section">
+        <div class="calc-row">
+            <span class="calc-label">Total Amount:</span>
+            <span class="calc-value">₹<span id="subTotal">0</span></span>
+        </div>
+        <div class="calc-row">
+            <span class="calc-label">Discount (₹):</span>
+            <span class="calc-value"><input type="number" class="discount-input" id="grandDiscount" value="0" oninput="calculateFinal()"></span>
+        </div>
+        <div class="calc-row final-total-row">
+            <span class="calc-label">Grand Total:</span>
+            <span class="calc-value">₹<span id="finalTotal">0</span></span>
+        </div>
+    </div>
+
+    <div class="no-print">
+        <button class="btn btn-print" onclick="finishAndPrint()">PRINT & SAVE</button>
+        <button class="btn btn-wa" onclick="shareWhatsApp()">WHATSAPP</button>
+    </div>
+</div>
+
+<script>
+    let masterData = [];
+    let billingItems = [];
+    
+    let currentInv = localStorage.getItem('patel_inv_v3') || 20260001;
+    document.getElementById('invNumDisplay').innerText = currentInv;
+
+    const sheetID = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
+    const base = `https://docs.google.com/spreadsheets/d/${sheetID}/gviz/tq?tqx=out:csv`;
+
+    async function fetchExcelData() {
+        try {
+            const response = await fetch(base);
+            const data = await response.text();
+            const rows = data.split('\n').slice(1); 
+            masterData = rows.map(row => {
+                const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return {
+                    c: cols[0]?.replace(/"/g, '') || '',
+                    n: cols[1]?.replace(/"/g, '') || '',
+                    p: parseInt(cols[2]?.replace(/"/g, '')) || 0
+                };
+            }).filter(item => item.n !== '');
+            document.getElementById('status-indicator').innerText = `✅ Excel Connected: ${masterData.length} Tests Loaded`;
+        } catch (error) {
+            document.getElementById('status-indicator').innerText = "❌ Connection Failed";
+        }
+    }
+
+    function filterTests() {
+        const query = document.getElementById('testSearch').value.toLowerCase();
+        const drop = document.getElementById('dropdown');
+        drop.innerHTML = '';
+        if(!query) { drop.style.display = 'none'; return; }
+
+        const matches = masterData.filter(x => x.n.toLowerCase().includes(query) || x.c.toLowerCase().includes(query));
+        matches.slice(0, 15).forEach(m => {
+            const div = document.createElement('div');
+            div.className = 'drop-item';
+            div.innerHTML = `<span><b>${m.c}</b> - ${m.n}</span> <b>₹${m.p}</b>`;
+            div.onclick = () => { addItem(m.c, m.n, m.p); drop.style.display = 'none'; document.getElementById('testSearch').value=''; };
+            drop.appendChild(div);
+        });
+        drop.style.display = matches.length ? 'block' : 'none';
+    }
+
+    function addItem(code, name, price) {
+        billingItems.push({code, name, price});
+        renderTable();
+    }
+
+    function removeItem(idx) { billingItems.splice(idx, 1); renderTable(); }
+
+    function renderTable() {
+        const body = document.getElementById('billBody');
+        body.innerHTML = '';
+        let subtotal = 0;
+        billingItems.forEach((x, i) => {
+            subtotal += x.price;
+            body.innerHTML += `<tr>
+                <td>${x.code}</td>
+                <td>${x.name}</td>
+                <td style="text-align: right;">${x.price}</td>
+                <td class="no-print btn-del" onclick="removeItem(${i})">✖</td>
+            </tr>`;
+        });
+        document.getElementById('subTotal').innerText = subtotal;
+        calculateFinal();
+    }
+
+    function calculateFinal() {
+        const sub = parseInt(document.getElementById('subTotal').innerText) || 0;
+        const disc = parseInt(document.getElementById('grandDiscount').value) || 0;
+        const final = sub - disc;
+        document.getElementById('finalTotal').innerText = final > 0 ? final : 0;
+    }
+
+    function finishAndPrint() {
+        if(!document.getElementById('pName').value) { alert("Please enter Patient Name"); return; }
+        window.print();
+        currentInv = parseInt(currentInv) + 1;
+        localStorage.setItem('patel_inv_v3', currentInv);
+        document.getElementById('invNumDisplay').innerText = currentInv;
+        
+        // Reset
+        billingItems = [];
+        document.getElementById('grandDiscount').value = 0;
+        document.getElementById('pName').value = '';
+        document.getElementById('pAge').value = '';
+        renderTable();
+    }
+
+    function shareWhatsApp() {
+        const name = document.getElementById('pName').value;
+        const final = document.getElementById('finalTotal').innerText;
+        const msg = `*PATEL DIAGNOSTIC UDAIPUR*\nInv: ${currentInv}\nPatient: ${name}\nGrand Total: ₹${final}\nStatus: Paid`;
+        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    }
+
+    setInterval(() => { document.getElementById('liveClock').innerText = new Date().toLocaleString(); }, 1000);
+</script>
+
+</body>
+</html>
