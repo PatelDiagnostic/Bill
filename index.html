@@ -2,10 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patel Diagnostic Udaipur - Final</title>
+    <title>Patel Diagnostic - Full Database</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background: #f4f4f4; }
-        .invoice-box { width: 210mm; height: 148.5mm; background: white; margin: auto; padding: 10mm; box-sizing: border-box; border-bottom: 2px dashed #bbb; position: relative; }
+        .invoice-box { width: 210mm; height: 148.5mm; background: white; margin: auto; padding: 10mm; box-sizing: border-box; border-bottom: 2px dashed #bbb; }
         
         .header { text-align: center; border-bottom: 3px solid #d35400; padding-bottom: 5px; margin-bottom: 12px; }
         .header h1 { margin: 0; color: #d35400; font-size: 24pt; text-transform: uppercase; }
@@ -14,7 +14,7 @@
         .customer-info { display: grid; grid-template-columns: 1.5fr 1fr 0.5fr 0.5fr; gap: 8px; margin-bottom: 12px; font-size: 10pt; }
         .info-item { border-bottom: 1px solid #ccc; padding: 5px 0; display: flex; align-items: center; }
         .info-item b { margin-right: 5px; color: #555; }
-        .required-field { border-bottom: 2px solid #e74c3c !important; }
+        .required-field { border-bottom: 2px solid #e74c3c !important; background-color: #fdf2f2; }
         input { border: none; width: 100%; outline: none; font-size: 10pt; background: transparent; }
 
         .controls { background: #eef2f3; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 10px; border: 1px solid #ddd; }
@@ -41,37 +41,37 @@
 </head>
 <body onload="initInvoice()">
 
-<div class="invoice-box">
+<div class="invoice-box" id="bill">
     <div class="header">
         <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
         <p>Titaradi, Udaipur | Contact: 8209746239</p>
     </div>
 
     <div class="controls no-print">
-        <input type="text" id="testSearch" list="testList" placeholder="Search Test (e.g. CBC, Liver, Fever)">
+        <input type="text" id="testSearch" list="testList" placeholder="Search any test (e.g. BharatFit, CBC, Fever, Dengue)...">
         <datalist id="testList"></datalist>
         <button type="button" class="btn btn-add" onclick="addTest()">Add</button>
         <button type="button" class="btn btn-manual" onclick="manualAdd()">Manual</button>
     </div>
 
     <div class="customer-info">
-        <div class="info-item" id="nameBox"><b>Name:*</b> <input type="text" id="pName" placeholder="Compulsory"></div>
-        <div class="info-item" id="ageBox"><b>Age:*</b> <input type="text" id="pAge" placeholder="Compulsory"></div>
+        <div class="info-item" id="nameBox"><b>Name:*</b> <input type="text" id="pName" placeholder="Required"></div>
+        <div class="info-item" id="ageBox"><b>Age:*</b> <input type="text" id="pAge" placeholder="Required"></div>
         <div class="info-item" id="sexBox"><b>Sex:*</b> <input type="text" id="pSex" placeholder="M/F"></div>
         
         <div class="info-item"><b>Inv No:</b> <span id="invNo" style="font-weight:bold;"></span></div>
-        <div class="info-item"><b>Date/Time:</b> <span id="liveClock" style="font-size: 8pt;"></span></div>
-        <div class="info-item" style="grid-column: span 2;"><b>Contact:</b> <input type="text" placeholder="Mobile"></div>
-        <div class="info-item" style="grid-column: span 4;"><b>Refer By:</b> <input type="text" placeholder="Doctor Name / Self"></div>
+        <div class="info-item"><b>Date:</b> <span id="liveClock" style="font-size: 8.5pt;"></span></div>
+        <div class="info-item" style="grid-column: span 2;"><b>Contact:</b> <input type="text" placeholder="Patient Mobile"></div>
+        <div class="info-item" style="grid-column: span 4;"><b>Refer By:</b> <input type="text" placeholder="Dr. Name / Self"></div>
     </div>
 
     <table>
         <thead>
             <tr>
                 <th width="8%">Sr.</th>
-                <th width="62%">Test Name</th>
+                <th width="72%">Test Name</th>
                 <th class="text-right" width="20%">Base Rate (₹)</th>
-                <th class="no-print" width="10%">Act</th>
+                <th class="no-print" width="5%"></th>
             </tr>
         </thead>
         <tbody id="billBody"></tbody>
@@ -89,20 +89,43 @@
 </div>
 
 <div class="no-print" style="text-align: center; margin-top: 30px;">
-    <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 50px;">Print & Save Bill</button>
+    <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 60px; cursor:pointer;">Print Bill</button>
 </div>
 
 <script>
-    // BASE RATES EXTRACTED FROM PDF
+    // FULL DATABASE EXTRACTED FROM PDF (BASE RATES) 
     const baseRates = {
-        "Bharatfit Super Health Package": 1399, "One Plus One BharatFit Package-2": 2249, "One Plus One BharatFit Package-5": 3799, "Health Fit Package-4": 2200, "Semen Analysis": 400, "Dengue & Chikungunya RNA Detection PCR": 1899, "Fever Panel IV": 1499, "Fever Panel III": 1399, "Fever Panel I": 699, "Fatty Liver Screening Package": 1599, "Fever Plus Diagnostic Profile": 3999, "BharatFit Women-Comprehensive": 4499, "BharatFit Women-Advance": 3499, "BharatFit Women-Essential": 2499, "Haemogram (CBC + ESR + PS)": 499, "Sepsis Panel-Basic": 1599, "Fever Insta Check (CBC + CRP)": 549, "Aayush Package-5": 1299, "Aayush Package-1": 499, "BharatFit Super Advance": 3599, "BharatFit Advance": 3149, "Lipase, Fluid": 700, "Amylase, Fluid": 400, "BRCA 1 & 2 Mutation Analysis NGS": 8000, "Dengue IgG & IgM, Rapid": 550, "Dengue NS1, Rapid": 450, "BharatFit Senior Citizen Package- Female": 3149, "BharatFit Senior Citizen Package- Male": 3149, "BharatFit Healthy Heart Package": 2599, "Urine Profile": 899, "Malaria Screening Panel": 799, "Bumper Pocket Saver Package": 199, "Cholesterol Profile": 350, "BharatFit Package 4": 1849, "BharatFit Package-1": 899, "BharatFit Pro": 599, "Ante Natal Profile Basic": 800, "KFT Urine Routine": 500, "Peripheral Blood Smear": 100, "Absolute Basophils Count": 160, "Microalbumin-Creatinine Ratio": 240, "Fever Panel-Comprehensive": 1799, "HIV Early Screen": 700, "Vitamin D Test (25 Hydroxy)": 649, "Urine Routine & Microscopic": 50, "TSH 3rd Generation": 380, "Triglycerides": 180, "Total Protein": 70, "Thyroid Profile Total": 450, "SGPT/ALT": 100, "SGOT/AST": 100, "Liver Function Test (LFT)": 399, "Kidney Function Test (KFT)": 399, "HBA1C Test": 299, "Complete Hemogram (CBC & ESR)": 299, "Complete Blood Count (CBC)": 249, "Blood Group Test": 50, "Vitamin B12 Test": 549
+        "Aayush Package-1": 499, "Aayush Package 2": 699, "Aayush Package 3": 849, "Aayush Package 4": 999, "Aayush Package-5": 1299,
+        "Absolute Basophils Count Blood Test": 160, "Absolute Granulocyte Count Blood Test": 160, "Absolute Lymphocyte Count Blood Test": 160,
+        "Absolute Monocyte Count Blood Test": 160, "Absolute Neutrophil Count (ANC) Test": 160, "Absolute Eosinophil Count (AEC) Test": 100,
+        "Acetone Urine (Qualitative) Test": 100, "Acid Fast Bacilli (AFB) Test (3 Samples)": 400, "AFB Stain Test (Acid Fast Bacilli)": 220,
+        "Adenosine Deaminase (ADA) Test, Serum": 400, "Adenosine Deaminase (ADA) Test Fluid": 400, "Albumin Test": 60, "Albumin Fluid Test": 60,
+        "Albumin Test by Spot Urine": 100, "Alkaline Phosphatase (ALP) Test": 100, "Amylase, Fluid": 400, "Amenorrhea Panel": 1599,
+        "Anemia Profile- Essential": 1199, "Ante Natal Profile Basic": 800, "Bharatfit Pro": 599, "Bharatfit Package-1": 899,
+        "Bharatfit Package-2": 1379, "Bharatfit Package-3": 1649, "Bharatfit Package 4": 1849, "Bharatfit Package-5": 2399, "Bharatfit Package 6": 3200,
+        "Bharatfit Advance": 3149, "Bharatfit Super Advance": 3599, "Bharatfit Premium Health Check": 4199, "Bharatfit Diabetes Check Package": 1649,
+        "Bharatfit Healthy Heart Package": 2599, "Bharatfit Senior Citizen Package- Male": 3149, "Bharatfit Senior Citizen Package- Female": 3149,
+        "BharatFit Women-Essential": 2499, "BharatFit Women-Advance": 3499, "BharatFit Women Extended": 3999, "BharatFit Women-Comprehensive": 4499,
+        "Bilirubin (Total, Direct & Indirect) Test": 150, "Bilirubin Direct Test": 140, "Bilirubin Total Test": 80, "Blood Group Test": 50,
+        "Blood Urea Test": 70, "Blood Urea Nitrogen (BUN) Test": 70, "Bumper Pocket Saver Package": 199, "Calcium Test": 100,
+        "Calcium lonised Serum Test": 600, "Cell Count, Body Fluid Test": 250, "Cholesterol Test": 90, "Cholesterol Profile": 350,
+        "Complete Blood Count (CBC) Test": 249, "Complete Hemogram (CBC & ESR)": 299, "Creatinine Test": 80, "Creatinine Spot Urine Test": 130,
+        "CRP Test (C Reactive Protein Test)": 360, "Culture Aerobic Pus": 400, "Dengue NS1, Rapid Card": 450, "Dengue IgG & IgM, Rapid Card": 550,
+        "Dengue Duo Screening Test": 700, "ESR Test": 80, "Fever Panel I": 699, "Fever Panel III": 1399, "Fever Panel IV": 1499,
+        "Fever Panel- Basic": 599, "Fever Panel-Pro": 1399, "Fever Panel-Comprehensive": 1799, "Fever Plus Diagnostic Profile": 3999,
+        "Glucose Fasting Test": 40, "Glucose Random Test": 40, "Glucose PP (Post Prandial) Test": 40, "HBA1C Test": 299, "Hemoglobin (Hb) Test": 50,
+        "HIV 1&2 Antibodies by CMIA": 480, "Iron Studies Test": 500, "Kidney Function Test (KFT)": 399, "Liver Function Test (LFT)": 399,
+        "Lipid Profile Test": 350, "Malaria Parasite Test (MP) Smear": 70, "Microalbumin-Creatinine Ratio": 240, "Peripheral Blood Smear Test": 100,
+        "Platelet Count Test": 80, "SGOT/AST Test": 100, "SGPT/ALT Test": 100, "Thyroid Profile Total": 450, "TSH 3rd Generation Test": 380,
+        "Uric Acid Test": 90, "Urine Routine & Microscopic Examination": 50, "Vitamin D Test (25 Hydroxy)": 649, "Vitamin B12 Test": 549,
+        "WIDAL Test By Slide Agglutination": 120
     };
 
-    let items = [];
+    let billItems = [];
 
     function updateClock() {
         const now = new Date();
-        document.getElementById('liveClock').innerText = now.toLocaleString('en-IN');
+        document.getElementById('liveClock').innerText = now.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
     }
 
     function initInvoice() {
@@ -121,19 +144,19 @@
     function addTest() {
         const name = document.getElementById('testSearch').value;
         if (baseRates[name]) {
-            items.push({ name: name, price: baseRates[name] });
+            billItems.push({ name: name, price: baseRates[name] });
             render();
             document.getElementById('testSearch').value = '';
         } else if (name !== "") {
-            alert("Test not in system.");
+            alert("Test not in system database.");
         }
     }
 
     function manualAdd() {
         const n = prompt("Test Name:");
-        const p = prompt("Base Price:");
+        const p = prompt("Base Price (Rate):");
         if (n && p) {
-            items.push({ name: n, price: parseFloat(p) });
+            billItems.push({ name: n, price: parseFloat(p) });
             render();
         }
     }
@@ -142,9 +165,9 @@
         const body = document.getElementById('billBody');
         body.innerHTML = '';
         let sub = 0;
-        items.forEach((it, i) => {
+        billItems.forEach((it, i) => {
             sub += it.price;
-            body.innerHTML += `<tr><td>${i+1}</td><td>${it.name}</td><td class="text-right">${it.price.toFixed(2)}</td><td class="no-print"><button onclick="items.splice(${i},1);render()">✖</button></td></tr>`;
+            body.innerHTML += `<tr><td>${i+1}</td><td>${it.name}</td><td class="text-right">${it.price.toFixed(2)}</td><td class="no-print"><button onclick="billItems.splice(${i},1);render()">✖</button></td></tr>`;
         });
         document.getElementById('subTotal').innerText = sub.toFixed(2);
         calculateTotal();
@@ -162,22 +185,20 @@
         const age = document.getElementById('pAge').value.trim();
         const sex = document.getElementById('pSex').value.trim();
 
-        // Reset Styles
         document.getElementById('nameBox').classList.remove('required-field');
         document.getElementById('ageBox').classList.remove('required-field');
         document.getElementById('sexBox').classList.remove('required-field');
 
         if (!name || !age || !sex) {
-            alert("Error: Name, Age, and Sex are compulsory fields!");
+            alert("Compulsory: Patient Name, Age, and Sex are required!");
             if (!name) document.getElementById('nameBox').classList.add('required-field');
             if (!age) document.getElementById('ageBox').classList.add('required-field');
             if (!sex) document.getElementById('sexBox').classList.add('required-field');
             return;
         }
 
-        if (items.length === 0) return alert("Please add a test.");
+        if (billItems.length === 0) return alert("Error: No tests added to bill.");
 
-        // Smart Hide Discount Row
         if (parseFloat(document.getElementById('discInput').value) === 0) {
             document.getElementById('discRow').classList.add('no-print');
         } else {
@@ -186,7 +207,6 @@
 
         window.print();
         
-        // Auto-increment
         let next = parseInt(document.getElementById('invNo').innerText) + 1;
         localStorage.setItem('lastInvPatel', next);
         setTimeout(() => { location.reload(); }, 1000);
