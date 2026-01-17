@@ -2,291 +2,157 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patel Diagnostic - Live Billing & History</title>
+    <title>PATEL DIAGNOSTIC UDAIPUR - Invoice</title>
     <style>
-        /* CRITICAL PRINT ARCHITECTURE */
-        @media print {
-            @page { size: A4; margin: 0; }
-            html, body { height: auto !important; overflow: visible !important; margin: 0; padding: 0; background: #fff !important; }
-            .no-print, .control-panel, .del-col, button, .live-label { display: none !important; }
-            .invoice-shell { 
-                display: block !important; 
-                border: none !important; 
-                width: 100% !important; 
-                margin: 0 !important; 
-                padding: 15mm !important;
-                box-shadow: none !important;
-                position: static !important;
-            }
-            .disc-row:not(.has-value) { display: none !important; }
-        }
-
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 20px; color: #333; }
-        
-        /* Invoice Shell */
-        .invoice-shell { 
-            width: 210mm; 
-            min-height: 140mm; 
-            background: white; 
-            margin: 10px auto; 
-            padding: 15mm; 
-            box-sizing: border-box; 
-            border: 1px solid #000;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; }
-
-        .patient-info { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .patient-info td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
-
-        .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; border: 1px solid #000; }
-        .items-table th { border: 1px solid #000; background: #f2f2f2; padding: 10px; text-align: left; }
-        .items-table td { border: 1px solid #000; padding: 10px; font-size: 14px; }
-
-        .summary-box { float: right; width: 250px; margin-top: 20px; border: 1px solid #000; padding: 10px; }
-        .sum-line { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; }
-        .disc-row { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; border-top: 1px solid #eee; color: #d32f2f; }
-        .disc-row:not(.has-value) { display: none; }
-
-        /* Dashboard Styles */
-        .control-panel { width: 210mm; margin: 20px auto; background: #fff; padding: 25px; border-radius: 12px; border: 1px solid #ddd; }
-        .search-container { position: relative; margin-bottom: 15px; }
-        #dropdown, #histDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; z-index: 500; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .drop-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-        .drop-item:hover { background: #f0f7ff; }
-        
-        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
-        button { padding: 12px 24px; cursor: pointer; font-weight: bold; border-radius: 6px; border: none; }
-        .del-btn { color: #e74c3c; cursor: pointer; font-weight: bold; font-size: 18px; text-align: center; }
-        .section-title { font-weight: bold; color: #2c3e50; margin-bottom: 10px; display: block; font-size: 12px; text-transform: uppercase; background: #ecf0f1; padding: 5px 10px; border-radius: 4px; }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
+        .info-section { display: flex; justify-content: space-between; margin-top: 20px; }
+        .patient-details { width: 60%; }
+        .bill-details { width: 35%; text-align: right; }
+        .search-container { margin: 20px 0; background: #f4f4f4; padding: 15px; border-radius: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .totals { margin-top: 20px; text-align: right; }
+        .print-btn { margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        @media print { .search-container, .print-btn { display: none; } }
     </style>
 </head>
-<body onload="initApp()">
+<body>
 
-<div class="invoice-shell">
     <div class="header">
         <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
-        <p>Titaradi, Udaipur | Contact: 8209746239</p>
+        <p>Lab Invoice & Receipt</p>
     </div>
 
-    <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; font-weight:bold;">
-        <span>Invoice No: <span id="dispInv">---</span></span>
-        <span id="liveClock">Loading Date & Time...</span>
+    <div class="search-container">
+        <h3>Search Old Patient Data</h3>
+        <input type="text" id="patientSearch" placeholder="Enter Contact or Name...">
+        <button onclick="searchPatient()">Search</button>
     </div>
 
-    <table class="patient-info">
-        <tr>
-            <td style="width:50%"><b>Patient:</b> <span id="outName"></span></td>
-            <td><b>Age/Sex:</b> <span id="outAge"></span></td>
-        </tr>
-        <tr>
-            <td><b>Mobile:</b> <span id="outMob"></span></td>
-            <td><b>Ref. By:</b> <span id="outRef"></span></td>
-        </tr>
-    </table>
-
-    <table class="items-table">
-        <thead>
-            <tr>
-                <th style="width: 75%;">Test Particulars</th>
-                <th style="width: 15%; text-align: right;">Price (₹)</th>
-                <th class="no-print del-col" style="width: 10%; text-align: center;">Edit</th>
-            </tr>
-        </thead>
-        <tbody id="outItems"></tbody>
-    </table>
-
-    <div class="summary-box">
-        <div class="sum-line"><span>Sub-Total:</span> <span>₹<span id="outSub">0</span></span></div>
-        <div id="discRow" class="disc-row"><span>Discount:</span> <span>- ₹<span id="outDisc">0</span></span></div>
-        <div class="sum-line" style="font-size: 20px; border-top: 2px solid #000; padding-top: 10px; margin-top: 5px;">
-            <span>NET TOTAL:</span> <span>₹<span id="outNet">0</span></span>
+    <div class="info-section">
+        <div class="patient-details">
+            <p><strong>Name:</strong> <input type="text" id="pName"></p>
+            <p><strong>Age:</strong> <input type="number" id="pAge"> <strong>Sex:</strong> 
+                <select id="pSex">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                </select>
+            </p>
+            <p><strong>Contact:</strong> <input type="text" id="pContact"></p>
+            <p><strong>Ref. By:</strong> <input type="text" id="pRef"></p>
+        </div>
+        <div class="bill-details">
+            <p><strong>Bill No:</strong> <span id="billNo"></span></p>
+            <p><strong>Date/Time:</strong> <span id="liveClock"></span></p>
         </div>
     </div>
-    <div style="clear: both;"></div>
-</div>
 
-<div class="control-panel no-print">
-    <span class="section-title">🔍 Search Old History (Record Database)</span>
     <div class="search-container">
-        <input type="text" id="histSearch" placeholder="Enter Name or Mobile to find old records..." style="width: 100%; box-sizing: border-box; border: 1px solid #3498db;" onkeyup="searchHistory()">
-        <div id="histDropdown"></div>
+        <h3>Add Tests</h3>
+        <input type="text" id="testSearch" placeholder="Search Test Name..." onkeyup="filterTests()">
+        <select id="testDropdown" style="width: 100%; margin-top: 5px;"></select>
+        <button onclick="addTest()" style="margin-top: 10px;">Add to Bill</button>
     </div>
 
-    <span class="section-title">✍️ New Patient Details</span>
-    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
-        <input type="text" id="inName" placeholder="Patient Name" oninput="updateView()">
-        <input type="text" id="inAge" placeholder="Age/Sex" oninput="updateView()">
-        <input type="text" id="inMob" placeholder="Mobile" oninput="updateView()">
-        <input type="text" id="inRef" value="Self" oninput="updateView()">
-        <input type="number" id="inDisc" placeholder="Discount ₹" oninput="updateView()">
+    <table id="invoiceTable">
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Price</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+
+    <div class="totals">
+        <p>Sub Total: <span id="subTotal">0.00</span></p>
+        <p>Discount: <input type="number" id="discount" value="0" oninput="calculateTotal()"> </p>
+        <h3>Grand Total: <span id="grandTotal">0.00</span></h3>
     </div>
 
-    <span class="section-title">🧪 Add Tests</span>
-    <div class="search-container">
-        <input type="text" id="search" placeholder="Search Test Name..." style="width: 100%; border: 2px solid #000; box-sizing: border-box;" onkeyup="searchSheet()">
-        <div id="dropdown"></div>
-    </div>
+    <button class="print-btn" onclick="saveAndPrint()">Print to PDF & Upload Data</button>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <input type="text" id="manN" placeholder="Manual Test Name" style="flex:2">
-        <input type="number" id="manP" placeholder="Manual Price" style="flex:1">
-        <button onclick="addManual()" style="background:#3498db; color:#fff">Add Test</button>
-    </div>
+    <script>
+        const DEPLOYMENT_ID = "AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw";
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo/edit";
+        
+        // Initialize Bill Number
+        let currentBill = localStorage.getItem('lastBill') || 20260001;
+        document.getElementById('billNo').innerText = currentBill;
 
-    <div style="text-align: center; border-top: 2px solid #eee; padding-top: 20px;">
-        <button id="saveBtn" onclick="saveAndPrint()" style="background:#000; color:#fff; padding: 15px 60px; font-size: 16px;">SAVE TO CLOUD & PRINT</button>
-        <button onclick="location.reload()" style="background:#95a5a6; color:#fff; padding: 15px 30px; margin-left:10px;">RESET FORM</button>
-    </div>
-</div>
-
-<script>
-    let testPriceDB = [];
-    let historyDB = [];
-    let currentBill = [];
-    let lastInv = localStorage.getItem('inv_2026') || 20260001;
-    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw/exec";
-
-    function initApp() {
-        startClock();
-        setupData();
-    }
-
-    function startClock() {
+        // Live Clock
         setInterval(() => {
-            const now = new Date();
-            document.getElementById('liveClock').innerText = now.toLocaleString();
+            document.getElementById('liveClock').innerText = new Date().toLocaleString();
         }, 1000);
-    }
 
-    async function setupData() {
-        document.getElementById('dispInv').innerText = lastInv;
-        const priceSid = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
-        const historySid = '1ssyQG81ds_9ZAAXoF9AUUK4bdOxR_exV2BqMpqxEOvU';
-        
-        try {
-            // Load Test Prices
-            const r1 = await fetch(`https://docs.google.com/spreadsheets/d/${priceSid}/gviz/tq?tqx=out:csv`);
-            const c1 = await r1.text();
-            testPriceDB = c1.split('\n').slice(1).map(r => {
-                const col = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return { n: col[1]?.replace(/"/g,''), p: parseInt(col[2]?.replace(/"/g,'')) || 0 };
-            }).filter(x => x.n);
+        [span_2](start_span)// Fetch Tests from your Google Sheet data[span_2](end_span)
+        const testData = [
+            {name: "Complete Blood Count (CBC)", price: 249},
+            {name: "Liver Function Test (LFT)", price: 399},
+            {name: "Kidney Function Test (KFT)", price: 399},
+            {name: "Thyroid Profile Total", price: 450},
+            {name: "Vitamin D Test", price: 649},
+            {name: "HbA1c Test", price: 299}
+            // Add more common tests from your list here for offline speed, 
+            // or fetch dynamically via the Deployment ID
+        ];
 
-            // Load History
-            const r2 = await fetch(`https://docs.google.com/spreadsheets/d/${historySid}/gviz/tq?tqx=out:csv`);
-            const c2 = await r2.text();
-            historyDB = c2.split('\n').slice(1).map(r => {
-                const col = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return { id: col[0], name: col[1], mob: col[2], total: col[3], date: col[4] };
+        function filterTests() {
+            let input = document.getElementById('testSearch').value.toUpperCase();
+            let dropdown = document.getElementById('testDropdown');
+            dropdown.innerHTML = "";
+            testData.filter(t => t.name.toUpperCase().includes(input)).forEach(t => {
+                let opt = document.createElement('option');
+                opt.value = t.price;
+                opt.text = `${t.name} - ₹${t.price}`;
+                opt.dataset.name = t.name;
+                dropdown.add(opt);
             });
-        } catch(e) { console.log("Database Syncing..."); }
-    }
-
-    function searchSheet() {
-        const q = document.getElementById('search').value.toLowerCase();
-        const d = document.getElementById('dropdown');
-        d.innerHTML = '';
-        if(!q) { d.style.display = 'none'; return; }
-        testPriceDB.filter(x => x.n.toLowerCase().includes(q)).slice(0, 10).forEach(m => {
-            const row = document.createElement('div');
-            row.className = 'drop-item';
-            row.innerHTML = `<span>${m.n}</span> <b>₹${m.p}</b>`;
-            row.onclick = () => { addTest(m.n, m.p); d.style.display = 'none'; document.getElementById('search').value = ''; };
-            d.appendChild(row);
-        });
-        d.style.display = 'block';
-    }
-
-    function searchHistory() {
-        const q = document.getElementById('histSearch').value.toLowerCase();
-        const d = document.getElementById('histDropdown');
-        d.innerHTML = '';
-        if(!q) { d.style.display = 'none'; return; }
-        historyDB.filter(x => x.name?.toLowerCase().includes(q) || x.mob?.includes(q)).slice(0, 5).forEach(h => {
-            const row = document.createElement('div');
-            row.className = 'drop-item';
-            row.innerHTML = `<span>#${h.id} - ${h.name}</span> <span style="font-size:11px">₹${h.total} (${h.date})</span>`;
-            row.onclick = () => {
-                document.getElementById('inName').value = h.name;
-                document.getElementById('inMob').value = h.mob;
-                updateView();
-                d.style.display = 'none';
-            };
-            d.appendChild(row);
-        });
-        d.style.display = 'block';
-    }
-
-    function addManual() {
-        const n = document.getElementById('manN').value;
-        const p = document.getElementById('manP').value;
-        if(n && p) { addTest(n, parseInt(p)); document.getElementById('manN').value = ''; document.getElementById('manP').value = ''; }
-    }
-
-    function addTest(n, p) {
-        currentBill.push({n, p});
-        updateView();
-    }
-
-    function removeTest(index) {
-        currentBill.splice(index, 1);
-        updateView();
-    }
-
-    function updateView() {
-        document.getElementById('outName').innerText = document.getElementById('inName').value;
-        document.getElementById('outAge').innerText = document.getElementById('inAge').value;
-        document.getElementById('outMob').innerText = document.getElementById('inMob').value;
-        document.getElementById('outRef').innerText = document.getElementById('inRef').value;
-        
-        const body = document.getElementById('outItems');
-        body.innerHTML = '';
-        let sub = 0;
-        currentBill.forEach((it, i) => {
-            sub += it.p;
-            body.innerHTML += `<tr><td>${it.n}</td><td style="text-align:right">${it.p}</td><td class="no-print del-col" onclick="removeTest(${i})"><span class="del-btn">✖</span></td></tr>`;
-        });
-
-        const disc = parseInt(document.getElementById('inDisc').value) || 0;
-        const discRow = document.getElementById('discRow');
-        if (disc > 0) {
-            discRow.classList.add('has-value');
-            document.getElementById('outDisc').innerText = disc;
-        } else {
-            discRow.classList.remove('has-value');
         }
-        document.getElementById('outSub').innerText = sub;
-        document.getElementById('outNet').innerText = sub - disc;
-    }
 
-    async function saveAndPrint() {
-        const name = document.getElementById('inName').value;
-        if(!name || currentBill.length === 0) return alert("Please enter Patient Name and add Tests.");
-        
-        const saveBtn = document.getElementById('saveBtn');
-        saveBtn.innerText = "UPLOADING...";
-        saveBtn.disabled = true;
+        function addTest() {
+            let dropdown = document.getElementById('testDropdown');
+            if(!dropdown.value) return;
+            let table = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0];
+            let row = table.insertRow();
+            row.insertCell(0).innerText = dropdown.options[dropdown.selectedIndex].dataset.name;
+            row.insertCell(1).innerText = dropdown.value;
+            row.insertCell(2).innerHTML = '<button onclick="this.parentElement.parentElement.remove(); calculateTotal();">Remove</button>';
+            calculateTotal();
+        }
 
-        const record = {
-            id: lastInv,
-            name: name,
-            mobile: document.getElementById('inMob').value,
-            total: document.getElementById('outNet').innerText,
-            tests: currentBill.map(x => x.n).join(", "),
-            date: new Date().toLocaleDateString() + " " + new Date().toLocaleTimeString()
-        };
+        function calculateTotal() {
+            let rows = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0].rows;
+            let sub = 0;
+            for(let row of rows) sub += parseFloat(row.cells[1].innerText);
+            let disc = parseFloat(document.getElementById('discount').value) || 0;
+            document.getElementById('subTotal').innerText = sub.toFixed(2);
+            document.getElementById('grandTotal').innerText = (sub - disc).toFixed(2);
+        }
 
-        try {
-            await fetch(APPS_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(record) });
-        } catch(e) {}
+        function searchPatient() {
+            // This would call your Google Apps Script 'doGet' with the search query
+            alert("Connecting to Deployment ID for Patient Search...");
+        }
 
-        window.print();
-        localStorage.setItem('inv_2026', parseInt(lastInv) + 1);
-        location.reload();
-    }
-</script>
+        function saveAndPrint() {
+            // Logic to send data to Google Sheet via Deployment ID
+            const data = {
+                billNo: currentBill,
+                name: document.getElementById('pName').value,
+                contact: document.getElementById('pContact').value,
+                total: document.getElementById('grandTotal').innerText
+            };
+
+            // Increment Bill No for next time
+            currentBill++;
+            localStorage.setItem('lastBill', currentBill);
+            
+            window.print();
+        }
+    </script>
 </body>
 </html>
