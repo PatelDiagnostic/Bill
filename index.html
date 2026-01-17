@@ -3,139 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patel Diagnostic - Separated Entry System</title>
+    <title>Patel Diagnostic - Upper A4 System</title>
     <style>
-        @page { size: A5; margin: 5mm; }
+        /* A4 Page Setup */
+        @page { size: A4; margin: 0; }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; }
-        .invoice-card { width: 148mm; min-height: 210mm; background: white; margin: 10px auto; padding: 15px; box-sizing: border-box; border: 1px solid #ccc; position: relative; }
         
+        /* Container stays at top of A4 */
+        .page-container { width: 210mm; height: 297mm; background: white; margin: 0 auto; padding: 10mm; box-sizing: border-box; }
+        
+        /* Invoice occupies only the top half (~148mm) */
+        .invoice-box { width: 100%; min-height: 135mm; border-bottom: 1px dashed #ccc; padding-bottom: 10px; position: relative; }
+
         .header { text-align: center; border-bottom: 2px solid #b71c1c; margin-bottom: 10px; }
-        .header h1 { margin: 0; font-size: 20px; color: #b71c1c; }
-        .meta-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+        .header h1 { margin: 0; font-size: 24px; color: #b71c1c; }
+        .meta-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
         
-        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px; margin-bottom: 15px; }
+        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 13px; margin-bottom: 15px; }
         .patient-grid div { display: flex; border-bottom: 1px solid #ddd; }
-        .patient-grid label { font-weight: bold; width: 80px; color: #555; }
-        .patient-grid input { border: none; outline: none; width: 100%; padding: 2px; font-size: 12px; }
+        .patient-grid label { font-weight: bold; width: 90px; color: #555; }
+        .patient-grid input { border: none; outline: none; width: 100%; padding: 2px; font-size: 13px; background: transparent; }
 
-        /* SEPARATE SECTIONS */
-        .entry-box { background: #fff; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; padding: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .section-title { font-size: 11px; font-weight: bold; color: #2e7d32; text-transform: uppercase; margin-bottom: 5px; display: block; }
+        /* SEPARATE ENTRY BOXES */
+        .entry-section { background: #f9f9f9; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 10px; padding: 10px; }
+        .section-tag { font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase; margin-bottom: 5px; display: block; }
         
-        /* Search Style */
+        /* Search */
         .search-wrap { position: relative; }
-        .search-input { width: 100%; padding: 8px; border: 1px solid #4CAF50; border-radius: 4px; box-sizing: border-box; }
-        #dropdown { position: absolute; width: 100%; background: white; border: 1px solid #ccc; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
-        .drop-item { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 12px; }
-        .drop-item:hover { background: #f1f1f1; }
+        .search-in { width: 100%; padding: 10px; border: 2px solid #4CAF50; border-radius: 4px; box-sizing: border-box; }
+        #dropdown { position: absolute; width: 100%; background: white; border: 1px solid #ccc; z-index: 100; max-height: 150px; overflow-y: auto; display: none; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .drop-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 13px; }
+        .drop-item:hover { background: #e8f5e9; }
 
-        /* Manual Style */
-        .manual-flex { display: flex; gap: 5px; }
-        .manual-name { flex: 2; padding: 8px; border: 1px solid #007bff; border-radius: 4px; }
-        .manual-price { width: 70px; padding: 8px; border: 1px solid #007bff; border-radius: 4px; }
-        .btn-add { background: #007bff; color: white; border: none; padding: 0 15px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        /* Manual */
+        .manual-flex { display: flex; gap: 8px; }
+        .m-name { flex: 2; padding: 10px; border: 2px solid #007bff; border-radius: 4px; }
+        .m-price { width: 90px; padding: 10px; border: 2px solid #007bff; border-radius: 4px; }
+        .add-btn { background: #007bff; color: white; border: none; padding: 0 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
 
         /* Table */
-        .invoice-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        .invoice-table th { background: #4CAF50; color: white; padding: 8px; text-align: left; }
-        .invoice-table td { padding: 8px; border-bottom: 1px solid #ddd; }
+        .invoice-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 10px; }
+        .invoice-table th { background: #4CAF50; color: white; padding: 10px; text-align: left; }
+        .invoice-table td { padding: 10px; border-bottom: 1px solid #ddd; }
         
-        .total-section { border-top: 2px solid #4CAF50; margin-top: 10px; text-align: right; }
-        .total-row { display: flex; justify-content: flex-end; align-items: center; margin-top: 5px; font-weight: bold; }
-        .disc-in { width: 70px; text-align: right; margin-left: 10px; border: 1px solid #ccc; padding: 4px; }
+        .totals { margin-top: 10px; float: right; width: 250px; }
+        .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
+        .disc-box { width: 80px; text-align: right; border: 1px solid #ccc; padding: 5px; font-weight: bold; }
 
-        .no-print { display: flex; justify-content: center; gap: 10px; margin-top: 15px; }
-        .btn-action { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; color: white; }
-        .btn-save { background: #2e7d32; }
-        .btn-wa { background: #25d366; }
+        .no-print { display: flex; justify-content: center; gap: 15px; margin-top: 20px; padding: 20px; background: #eee; border-radius: 8px; }
+        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; font-size: 14px; }
+        .save-btn { background: #2e7d32; }
+        .wa-btn { background: #25d366; }
 
-        .history-box { margin-top: 15px; border-top: 2px dashed #007bff; padding-top: 10px; }
-        .hist-in { width: 100%; padding: 8px; border: 1px solid #007bff; border-radius: 4px; margin-bottom: 5px; font-size: 12px; }
-        #histList { max-height: 80px; overflow-y: auto; background: white; font-size: 11px; }
-        .hist-item { padding: 5px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .history-panel { margin-top: 20px; border: 1px solid #007bff; padding: 10px; background: #eef7ff; border-radius: 6px; }
 
         @media print {
-            .no-print, .entry-box, .history-box, .btn-del { display: none !important; }
-            .disc-in { border: none !important; }
+            .no-print, .entry-section, .history-panel, .del-col { display: none !important; }
             body { background: white; }
-            .invoice-card { border: none; box-shadow: none; width: 100%; margin: 0; }
+            .page-container { margin: 0; padding: 10mm; width: 210mm; }
+            .invoice-box { border-bottom: none; }
+            .disc-box { border: none !important; }
         }
     </style>
 </head>
-<body onload="init()">
+<body onload="startup()">
 
-<div class="invoice-card" id="billArea">
-    <div class="header">
-        <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
-        <p>Titaradi, Udaipur | 8209746239</p>
-    </div>
-
-    <div class="meta-row">
-        <div>Inv No: <b id="invNum">20260001</b></div>
-        <div id="clock"></div>
-    </div>
-
-    <div class="patient-grid">
-        <div><label>Name:</label><input type="text" id="pName"></div>
-        <div><label>Age/Sex:</label><input type="text" id="pAge"></div>
-        <div><label>Mobile:</label><input type="text" id="pMob"></div>
-        <div><label>Ref. By:</label><input type="text" id="pRef" value="Self"></div>
-    </div>
-
-    <div class="entry-box no-print" style="border-color: #4CAF50;">
-        <span class="section-title">🔍 Search From Google Sheet</span>
-        <div class="search-wrap">
-            <input type="text" id="searchIn" class="search-input" placeholder="Type test name (e.g. CBC, Liver)..." onkeyup="searchSheet()">
-            <div id="dropdown"></div>
+<div class="page-container">
+    <div class="invoice-box" id="printArea">
+        <div class="header">
+            <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
+            <p>Titaradi, Udaipur | 8209746239</p>
         </div>
-        <div id="loadStatus" style="font-size: 9px; color: #666; margin-top: 4px;">Loading tests...</div>
-    </div>
 
-    <div class="entry-box no-print" style="border-color: #007bff;">
-        <span class="section-title">✍️ Manual Test Entry</span>
-        <div class="manual-flex">
-            <input type="text" id="manName" class="manual-name" placeholder="Test Name">
-            <input type="number" id="manPrice" class="manual-price" placeholder="Price">
-            <button class="btn-add" onclick="addManual()">ADD</button>
+        <div class="meta-row">
+            <div>Invoice No: <b id="displayInv">20260001</b></div>
+            <div id="dateTime"></div>
         </div>
-    </div>
 
-    <table class="invoice-table">
-        <thead>
-            <tr><th>Description</th><th style="text-align:right">Amount (₹)</th><th class="no-print"></th></tr>
-        </thead>
-        <tbody id="billBody"></tbody>
-    </table>
+        <div class="patient-grid">
+            <div><label>Name:</label><input type="text" id="pName"></div>
+            <div><label>Age/Sex:</label><input type="text" id="pAge"></div>
+            <div><label>Mobile:</label><input type="text" id="pMob"></div>
+            <div><label>Ref. By:</label><input type="text" id="pRef" value="Self"></div>
+        </div>
 
-    <div class="total-section">
-        <div class="total-row">Sub Total: ₹<span id="subT">0</span></div>
-        <div class="total-row">Discount (₹): <input type="number" id="disc" class="disc-in" value="0" oninput="calc()"></div>
-        <div class="total-row" style="color: #b71c1c; font-size: 16px;">Net Total: ₹<span id="netT">0</span></div>
+        <div class="entry-section no-print" style="border-color: #4CAF50;">
+            <span class="section-tag">🔍 Search Google Sheet Database</span>
+            <div class="search-wrap">
+                <input type="text" id="sheetSearch" class="search-in" placeholder="Type Test Name..." onkeyup="liveSearch()">
+                <div id="dropdown"></div>
+            </div>
+            <div id="loadMsg" style="font-size: 10px; color: green; margin-top: 5px;">Connecting...</div>
+        </div>
+
+        <div class="entry-section no-print" style="border-color: #007bff;">
+            <span class="section-tag">✍️ Manual Price Entry</span>
+            <div class="manual-flex">
+                <input type="text" id="manualN" class="m-name" placeholder="Test Name">
+                <input type="number" id="manualP" class="m-price" placeholder="Price">
+                <button class="add-btn" onclick="addManual()">ADD TEST</button>
+            </div>
+        </div>
+
+        <table class="invoice-table">
+            <thead>
+                <tr>
+                    <th style="width: 70%;">Test Description</th>
+                    <th style="text-align: right; width: 20%;">Price (₹)</th>
+                    <th class="del-col no-print" style="width: 10%;"></th>
+                </tr>
+            </thead>
+            <tbody id="billBody"></tbody>
+        </table>
+
+        <div class="totals">
+            <div class="total-row">Sub Total: <span>₹<span id="subT">0</span></span></div>
+            <div class="total-row">Discount: <input type="number" id="discIn" class="disc-box" value="0" oninput="calculate()"></div>
+            <div class="total-row" style="color: #b71c1c; border-top: 1px solid #eee; padding-top: 5px;">Net Payable: <span>₹<span id="netT">0</span></span></div>
+        </div>
+        <div style="clear: both;"></div>
     </div>
 
     <div class="no-print">
-        <button class="btn-action btn-save" onclick="saveBill()">PRINT & SAVE</button>
-        <button class="btn-action btn-wa" onclick="shareWA()">SEND WHATSAPP</button>
+        <button class="btn save-btn" onclick="saveAndPrint()">PRINT & SAVE</button>
+        <button class="btn wa-btn" onclick="sendWA()">WHATSAPP PDF</button>
     </div>
 
-    <div class="history-box no-print">
-        <span class="section-title" style="color: #007bff;">📜 Old Bill History</span>
-        <input type="text" class="hist-in" id="histIn" placeholder="Search by name or mobile..." onkeyup="searchHistory()">
-        <div id="histList"></div>
+    <div class="history-panel no-print">
+        <span class="section-tag" style="color: #007bff;">📜 Search Saved History</span>
+        <input type="text" id="histSearch" style="width: 100%; padding: 8px; border: 1px solid #007bff;" placeholder="Name or Mobile..." onkeyup="findHist()">
+        <div id="histOutput" style="max-height: 100px; overflow-y: auto; background: white; margin-top: 5px; font-size: 12px;"></div>
     </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-    let sheetData = [];
-    let currentItems = [];
-    let invId = localStorage.getItem('p_inv_id') || 20260001;
-    let localHistory = JSON.parse(localStorage.getItem('p_history')) || [];
+    let db = [];
+    let items = [];
+    let currentInv = localStorage.getItem('p_inv_2026') || 20260001;
+    let records = JSON.parse(localStorage.getItem('p_records')) || [];
 
-    async function init() {
-        document.getElementById('invNum').innerText = invId;
-        // Using your requested Google Sheet link
+    async function startup() {
+        document.getElementById('displayInv').innerText = currentInv;
         const sheetId = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
         const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
 
@@ -143,116 +153,95 @@
             const res = await fetch(url);
             const csv = await res.text();
             const rows = csv.split('\n').slice(1);
-            sheetData = rows.map(r => {
+            db = rows.map(r => {
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return { n: c[1]?.replace(/"/g,'').trim(), p: parseInt(c[2]?.replace(/"/g,'')) || 0 };
             }).filter(x => x.n);
-            document.getElementById('loadStatus').innerText = `✅ ${sheetData.length} Tests Ready`;
-        } catch(e) {
-            document.getElementById('loadStatus').innerText = "⚠️ Sheet Error. Set sharing to 'Anyone with link'.";
-        }
-        setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleString(); }, 1000);
+            document.getElementById('loadMsg').innerText = `✅ Database Connected (${db.length} tests)`;
+        } catch(e) { document.getElementById('loadMsg').innerText = "❌ Database Error"; }
+        
+        setInterval(() => { document.getElementById('dateTime').innerText = new Date().toLocaleString(); }, 1000);
     }
 
-    // SECTION 1: SEARCH LOGIC
-    function searchSheet() {
-        const q = document.getElementById('searchIn').value.toLowerCase();
+    function liveSearch() {
+        const q = document.getElementById('sheetSearch').value.toLowerCase();
         const d = document.getElementById('dropdown');
         d.innerHTML = '';
         if(!q) { d.style.display = 'none'; return; }
-        
-        const matches = sheetData.filter(x => x.n.toLowerCase().includes(q));
-        matches.slice(0, 10).forEach(m => {
+        db.filter(x => x.n.toLowerCase().includes(q)).slice(0, 10).forEach(m => {
             const div = document.createElement('div');
             div.className = 'drop-item';
             div.innerHTML = `<span>${m.n}</span> <b>₹${m.p}</b>`;
-            div.onclick = () => { addItem(m.n, m.p); d.style.display='none'; document.getElementById('searchIn').value=''; };
+            div.onclick = () => { pushItem(m.n, m.p); d.style.display='none'; document.getElementById('sheetSearch').value=''; };
             d.appendChild(div);
         });
-        d.style.display = matches.length ? 'block' : 'none';
+        d.style.display = 'block';
     }
 
-    // SECTION 2: MANUAL LOGIC
     function addManual() {
-        const n = document.getElementById('manName').value;
-        const p = document.getElementById('manPrice').value;
-        if(n && p) {
-            addItem(n, parseInt(p));
-            document.getElementById('manName').value = '';
-            document.getElementById('manPrice').value = '';
-        } else {
-            alert("Enter both Name and Price");
-        }
+        const n = document.getElementById('manualN').value;
+        const p = document.getElementById('manualP').value;
+        if(n && p) { pushItem(n, parseInt(p)); document.getElementById('manualN').value=''; document.getElementById('manualP').value=''; }
     }
 
-    function addItem(n, p) {
-        currentItems.push({n, p});
-        render();
+    function pushItem(n, p) {
+        items.push({n, p});
+        updateTable();
     }
 
-    function render() {
-        const b = document.getElementById('billBody');
-        b.innerHTML = '';
+    function updateTable() {
+        const body = document.getElementById('billBody');
+        body.innerHTML = '';
         let s = 0;
-        currentItems.forEach((item, i) => {
-            s += item.p;
-            b.innerHTML += `<tr><td>${item.n}</td><td style="text-align:right">${item.p}</td><td class="no-print" style="color:red; cursor:pointer" onclick="currentItems.splice(${i},1);render()">✖</td></tr>`;
+        items.forEach((it, i) => {
+            s += it.p;
+            body.innerHTML += `<tr><td>${it.n}</td><td style="text-align:right">${it.p}</td><td class="del-col no-print" onclick="items.splice(${i},1);updateTable()" style="color:red; cursor:pointer; text-align:center;">✖</td></tr>`;
         });
         document.getElementById('subT').innerText = s;
-        calc();
+        calculate();
     }
 
-    function calc() {
+    function calculate() {
         const s = parseInt(document.getElementById('subT').innerText);
-        const d = parseInt(document.getElementById('disc').value) || 0;
+        const d = parseInt(document.getElementById('discIn').value) || 0;
         document.getElementById('netT').innerText = s - d;
     }
 
-    function saveBill() {
+    function saveAndPrint() {
         const name = document.getElementById('pName').value;
         if(!name) return alert("Patient Name Required");
-
-        const data = {
-            id: invId,
-            name: name,
-            mob: document.getElementById('pMob').value,
-            date: new Date().toLocaleDateString(),
-            total: document.getElementById('netT').innerText,
-            tests: currentItems.map(x => x.n).join(", ")
-        };
-        localHistory.push(data);
-        localStorage.setItem('p_history', JSON.stringify(localHistory));
-
+        
+        records.push({
+            id: currentInv, name: name, mob: document.getElementById('pMob').value,
+            date: new Date().toLocaleDateString(), total: document.getElementById('netT').innerText
+        });
+        localStorage.setItem('p_records', JSON.stringify(records));
+        
         window.print();
-        localStorage.setItem('p_inv_id', parseInt(invId) + 1);
+        localStorage.setItem('p_inv_2026', parseInt(currentInv) + 1);
         location.reload();
     }
 
-    function shareWA() {
+    function sendWA() {
         const name = document.getElementById('pName').value;
         const mob = document.getElementById('pMob').value;
         const total = document.getElementById('netT').innerText;
         
-        // Generate PDF
-        const element = document.getElementById('billArea');
-        html2pdf().from(element).set({ 
+        html2pdf().from(document.getElementById('printArea')).set({ 
             margin: 10, filename: `Bill_${name}.pdf`, jsPDF: { format: 'a5' } 
         }).save();
 
-        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInv No: ${invId}%0APatient: ${name}%0ATotal: ₹${total}%0A_Please download and attach the PDF invoice._`;
+        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInv No: ${currentInv}%0APatient: ${name}%0ATotal: ₹${total}%0A_PDF Invoice Attached below._`;
         window.open(`https://wa.me/91${mob}?text=${text}`, '_blank');
     }
 
-    function searchHistory() {
-        const q = document.getElementById('histIn').value.toLowerCase();
-        const l = document.getElementById('histList');
-        l.innerHTML = '';
+    function findHist() {
+        const q = document.getElementById('histSearch').value.toLowerCase();
+        const out = document.getElementById('histOutput');
+        out.innerHTML = '';
         if(!q) return;
-        localHistory.filter(b => b.name.toLowerCase().includes(q) || b.mob.includes(q)).reverse().forEach(b => {
-            const div = document.createElement('div');
-            div.className = 'hist-item';
-            div.innerHTML = `<span>#${b.id} | ${b.name}</span> <b>₹${b.total}</b>`;
-            l.appendChild(div);
+        records.filter(r => r.name.toLowerCase().includes(q) || r.mob.includes(q)).reverse().forEach(r => {
+            out.innerHTML += `<div style="padding:5px; border-bottom:1px solid #ddd;">#${r.id} | ${r.name} | ₹${r.total}</div>`;
         });
     }
 </script>
