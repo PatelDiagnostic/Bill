@@ -2,268 +2,201 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patel Diagnostic - Secure Invoice System</title>
+    <title>Patel Diagnostic - Simple Print</title>
     <style>
-        /* A4 Page Setup */
+        /* A4 Page Logic */
         @page { size: A4; margin: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
         
-        /* Login Overlay */
-        #loginOverlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #2c3e50; z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; }
-        .login-box { background: white; padding: 30px; border-radius: 8px; color: #333; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
-        .login-box input { padding: 10px; width: 200px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; display: block; }
-        .login-box button { padding: 10px 25px; background: #000; color: #fff; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        /* Login Screen */
+        #lock { position: fixed; inset: 0; background: #333; z-index: 999; display: flex; justify-content: center; align-items: center; color: #fff; }
+        .lock-box { background: #fff; padding: 20px; border-radius: 5px; color: #000; text-align: center; }
 
-        /* Container stays at top of A4 */
-        .page-container { width: 210mm; height: 297mm; background: white; margin: 0 auto; padding: 10mm; box-sizing: border-box; }
+        /* Print Container (Upper A4) */
+        .a4-page { width: 210mm; height: 297mm; background: #fff; margin: 0 auto; padding: 10mm; box-sizing: border-box; }
+        .invoice-area { width: 100%; border-bottom: 1px dashed #000; padding-bottom: 20px; }
+
+        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; }
+        .header h1 { margin: 0; font-size: 24px; }
         
-        /* Invoice occupies top half */
-        .invoice-box { width: 100%; min-height: 135mm; border-bottom: 1px dashed #000; padding-bottom: 20px; position: relative; }
+        .info-table { width: 100%; margin-bottom: 20px; font-size: 14px; }
+        .info-table td { padding: 5px 0; border-bottom: 1px solid #eee; }
 
-        .header { text-align: center; border-bottom: 2px solid #000; margin-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 26px; color: #000; text-transform: uppercase; }
-        .header p { margin: 5px 0; font-size: 12px; font-weight: bold; }
+        .items-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .items-table th { border: 1px solid #000; padding: 8px; background: #f0f0f0; text-align: left; }
+        .items-table td { border: 1px solid #000; padding: 8px; }
 
-        .meta-row { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 15px; border-bottom: 1px solid #000; padding-bottom: 5px; }
-        
-        .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px; margin-bottom: 20px; }
-        .patient-grid div { display: flex; border-bottom: 1px solid #eee; }
-        .patient-grid label { font-weight: bold; width: 90px; }
-        .patient-grid input { border: none; outline: none; width: 100%; padding: 2px; font-size: 13px; background: transparent; }
+        .summary { float: right; width: 200px; margin-top: 15px; font-weight: bold; }
+        .summary div { display: flex; justify-content: space-between; padding: 3px 0; }
 
-        /* Interface Elements */
-        .entry-section { background: #f9f9f9; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 10px; padding: 10px; }
-        .section-tag { font-size: 10px; font-weight: bold; color: #000; text-transform: uppercase; margin-bottom: 5px; display: block; }
-        .search-wrap { position: relative; }
-        .search-in { width: 100%; padding: 10px; border: 1px solid #000; border-radius: 4px; box-sizing: border-box; }
-        #dropdown { position: absolute; width: 100%; background: white; border: 1px solid #ccc; z-index: 100; max-height: 150px; overflow-y: auto; display: none; }
-        .drop-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 13px; }
-        .manual-flex { display: flex; gap: 8px; }
-        .m-name { flex: 2; padding: 10px; border: 1px solid #000; border-radius: 4px; }
-        .m-price { width: 90px; padding: 10px; border: 1px solid #000; border-radius: 4px; }
-        .add-btn { background: #000; color: white; border: none; padding: 0 20px; border-radius: 4px; cursor: pointer; font-weight: bold; }
-
-        /* Professional B&W Table */
-        .invoice-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 10px; border: 1px solid #000; }
-        .invoice-table th { background: #eee; color: #000; padding: 10px; text-align: left; border: 1px solid #000; }
-        .invoice-table td { padding: 10px; border: 1px solid #000; }
-        
-        .totals { margin-top: 15px; float: right; width: 250px; border: 1px solid #000; padding: 10px; }
-        .total-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-weight: bold; font-size: 14px; }
-        .disc-box { width: 80px; text-align: right; border: 1px solid #ccc; padding: 5px; }
-
-        .no-print { display: flex; justify-content: center; gap: 15px; margin-top: 20px; padding: 15px; background: #ddd; border-radius: 8px; }
-        .btn { padding: 12px 25px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; font-size: 14px; }
-        .save-btn { background: #000; }
-        .wa-btn { background: #25d366; }
-
-        /* History */
-        .history-panel { margin-top: 20px; border: 1px solid #000; padding: 10px; background: #fff; }
+        /* Interface (Hidden during print) */
+        .controls { background: #eee; padding: 15px; margin-top: 20px; border-radius: 8px; }
+        .input-row { display: flex; gap: 10px; margin-bottom: 10px; }
+        input, button { padding: 8px; border: 1px solid #000; }
+        #drop { border: 1px solid #ccc; max-height: 150px; overflow-y: auto; display: none; background: #fff; }
+        .item { padding: 8px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
 
         @media print {
-            .no-print, .entry-section, .history-panel, .del-col, #loginOverlay { display: none !important; }
-            body { background: white; }
-            .page-container { margin: 0; padding: 10mm; width: 210mm; }
-            .invoice-box { border-bottom: none; }
-            .disc-box { border: none !important; }
-            .invoice-table th { background: #f2f2f2 !important; -webkit-print-color-adjust: exact; }
+            .controls, #lock, .del-btn { display: none !important; }
+            body { background: #fff; }
+            .a4-page { width: 100%; margin: 0; padding: 10mm; }
         }
     </style>
 </head>
 <body>
 
-<div id="loginOverlay">
-    <div class="login-box">
-        <h3>Patel Diagnostic Admin</h3>
-        <input type="password" id="passInput" placeholder="Enter Password">
-        <button onclick="checkPass()">Login</button>
-        <p id="errorMsg" style="color:red; font-size:12px; margin-top:10px; display:none;">Invalid Password!</p>
+<div id="lock">
+    <div class="lock-box">
+        <h3>Admin Login</h3>
+        <input type="password" id="pw" placeholder="Password">
+        <button onclick="login()">Enter</button>
     </div>
 </div>
 
-<div class="page-container" id="mainApp" style="display:none;">
-    <div class="invoice-box" id="printArea">
+<div class="a4-page">
+    <div class="invoice-area" id="bill">
         <div class="header">
             <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
-            <p>Address: Titaradi, Udaipur | Contact: 8209746239</p>
+            <p>Titaradi, Udaipur | Mob: 8209746239</p>
         </div>
 
-        <div class="meta-row">
-            <div>Invoice No: <b id="displayInv">20260001</b></div>
-            <div id="dateTime"></div>
-        </div>
-
-        <div class="patient-grid">
-            <div><label>Name:</label><input type="text" id="pName"></div>
-            <div><label>Age/Sex:</label><input type="text" id="pAge"></div>
-            <div><label>Mobile:</label><input type="text" id="pMob"></div>
-            <div><label>Ref. By:</label><input type="text" id="pRef" value="Self"></div>
-        </div>
-
-        <div class="entry-section no-print">
-            <span class="section-tag">🔍 Search Google Sheet Database</span>
-            <div class="search-wrap">
-                <input type="text" id="sheetSearch" class="search-in" placeholder="Search Test Name..." onkeyup="liveSearch()">
-                <div id="dropdown"></div>
-            </div>
-            <div id="loadMsg" style="font-size: 10px; color: grey; margin-top: 5px;">Connecting...</div>
-        </div>
-
-        <div class="entry-section no-print">
-            <span class="section-tag">✍️ Manual Test Entry</span>
-            <div class="manual-flex">
-                <input type="text" id="manualN" class="m-name" placeholder="Test Name">
-                <input type="number" id="manualP" class="m-price" placeholder="Price">
-                <button class="add-btn" onclick="addManual()">ADD</button>
-            </div>
-        </div>
-
-        <table class="invoice-table">
-            <thead>
-                <tr>
-                    <th style="width: 70%;">Test Description</th>
-                    <th style="text-align: right; width: 20%;">Price (₹)</th>
-                    <th class="del-col no-print" style="width: 10%;"></th>
-                </tr>
-            </thead>
-            <tbody id="billBody"></tbody>
+        <table class="info-table">
+            <tr>
+                <td style="width:50%"><b>Invoice:</b> <span id="invNo">---</span></td>
+                <td style="text-align:right"><b>Date:</b> <span id="curDate"></span></td>
+            </tr>
+            <tr>
+                <td><b>Patient:</b> <input type="text" id="pName" placeholder="Name..." style="border:none; width:80%"></td>
+                <td><b>Age/Sex:</b> <input type="text" id="pAge" placeholder="00/M" style="border:none; width:50%"></td>
+            </tr>
+            <tr>
+                <td><b>Mobile:</b> <input type="text" id="pMob" placeholder="0000000000" style="border:none;"></td>
+                <td><b>Ref By:</b> <input type="text" id="pRef" value="Self" style="border:none;"></td>
+            </tr>
         </table>
 
-        <div class="totals">
-            <div class="total-row">Sub Total: <span>₹<span id="subT">0</span></span></div>
-            <div class="total-row">Discount: <input type="number" id="discIn" class="disc-box" value="0" oninput="calculate()"></div>
-            <div class="total-row" style="font-size: 18px; border-top: 2px solid #000; padding-top: 5px;">Net Total: <span>₹<span id="netT">0</span></span></div>
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th>Test Name</th>
+                    <th style="width:100px; text-align:right;">Price (₹)</th>
+                    <th class="del-btn" style="width:30px"></th>
+                </tr>
+            </thead>
+            <tbody id="list"></tbody>
+        </table>
+
+        <div class="summary">
+            <div><span>Total:</span> <span id="sum">0</span></div>
+            <div><span>Discount:</span> <input type="number" id="dsc" value="0" oninput="calc()" style="width:60px; text-align:right"></div>
+            <div style="border-top:2px solid #000; font-size:18px; margin-top:5px;">
+                <span>Net:</span> <span>₹<span id="net">0</span></span>
+            </div>
         </div>
-        <div style="clear: both;"></div>
+        <div style="clear:both"></div>
     </div>
 
-    <div class="no-print">
-        <button class="btn save-btn" onclick="saveAndPrint()">PRINT & SAVE</button>
-        <button class="btn wa-btn" onclick="sendWA()">WHATSAPP BILL</button>
-    </div>
-
-    <div class="history-panel no-print">
-        <span class="section-tag">📜 Search Saved Records</span>
-        <input type="text" id="histSearch" style="width: 100%; padding: 8px; border: 1px solid #000;" placeholder="Search by name or mobile..." onkeyup="findHist()">
-        <div id="histOutput" style="max-height: 100px; overflow-y: auto; background: white; margin-top: 5px; font-size: 12px;"></div>
+    <div class="controls">
+        <div style="font-weight:bold; margin-bottom:10px;">ADD TESTS:</div>
+        <div class="input-row">
+            <div style="flex:1">
+                <input type="text" id="search" placeholder="Search Google Sheet..." onkeyup="searchDB()" style="width:100%">
+                <div id="drop"></div>
+            </div>
+            <input type="text" id="mName" placeholder="Manual Name">
+            <input type="number" id="mPrice" placeholder="Price" style="width:80px">
+            <button onclick="addM()" style="background:#000; color:#fff">Add Manual</button>
+        </div>
+        <div style="margin-top:20px; display:flex; gap:10px;">
+            <button onclick="doPrint()" style="background:#2ecc71; color:#fff; flex:1; padding:15px; font-weight:bold;">PRINT & SAVE BILL</button>
+            <button onclick="doWA()" style="background:#25d366; color:#fff; flex:1; font-weight:bold;">WHATSAPP MESSAGE</button>
+        </div>
     </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-
 <script>
-    const CORRECT_PASS = "Patel@2025";
-    let db = [];
-    let items = [];
-    let currentInv = localStorage.getItem('p_inv_2026') || 20260001;
-    let records = JSON.parse(localStorage.getItem('p_records')) || [];
+    let master = [];
+    let active = [];
+    let inv = localStorage.getItem('patel_inv') || 20260001;
 
-    function checkPass() {
-        const input = document.getElementById('passInput').value;
-        if(input === CORRECT_PASS) {
-            document.getElementById('loginOverlay').style.display = 'none';
-            document.getElementById('mainApp').style.display = 'block';
-            startup();
-        } else {
-            document.getElementById('errorMsg').style.display = 'block';
-        }
+    function login() {
+        if(document.getElementById('pw').value === "Patel@2025") {
+            document.getElementById('lock').style.display='none';
+            init();
+        } else { alert("Wrong Password"); }
     }
 
-    async function startup() {
-        document.getElementById('displayInv').innerText = currentInv;
-        const sheetId = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
-        const url = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv`;
-
+    async function init() {
+        document.getElementById('invNo').innerText = inv;
+        document.getElementById('curDate').innerText = new Date().toLocaleDateString();
+        const sid = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
         try {
-            const res = await fetch(url);
+            const res = await fetch(`https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`);
             const csv = await res.text();
-            const rows = csv.split('\n').slice(1);
-            db = rows.map(r => {
+            master = csv.split('\n').slice(1).map(r => {
                 const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return { n: c[1]?.replace(/"/g,'').trim(), p: parseInt(c[2]?.replace(/"/g,'')) || 0 };
+                return { n: c[1]?.replace(/"/g,''), p: parseInt(c[2]?.replace(/"/g,'')) || 0 };
             }).filter(x => x.n);
-            document.getElementById('loadMsg').innerText = `✅ Connected: ${db.length} tests.`;
-        } catch(e) { document.getElementById('loadMsg').innerText = "❌ Database Offline"; }
-        
-        setInterval(() => { document.getElementById('dateTime').innerText = new Date().toLocaleString(); }, 1000);
+        } catch(e) { console.log("Offline Mode"); }
     }
 
-    function liveSearch() {
-        const q = document.getElementById('sheetSearch').value.toLowerCase();
-        const d = document.getElementById('dropdown');
+    function searchDB() {
+        const q = document.getElementById('search').value.toLowerCase();
+        const d = document.getElementById('drop');
         d.innerHTML = '';
-        if(!q) { d.style.display = 'none'; return; }
-        db.filter(x => x.n.toLowerCase().includes(q)).slice(0, 10).forEach(m => {
+        if(!q) { d.style.display='none'; return; }
+        master.filter(x => x.n.toLowerCase().includes(q)).slice(0,8).forEach(m => {
             const div = document.createElement('div');
-            div.className = 'drop-item';
+            div.className = 'item';
             div.innerHTML = `<span>${m.n}</span> <b>₹${m.p}</b>`;
-            div.onclick = () => { pushItem(m.n, m.p); d.style.display='none'; document.getElementById('sheetSearch').value=''; };
+            div.onclick = () => { add(m.n, m.p); d.style.display='none'; document.getElementById('search').value=''; };
             d.appendChild(div);
         });
         d.style.display = 'block';
     }
 
-    function addManual() {
-        const n = document.getElementById('manualN').value;
-        const p = document.getElementById('manualP').value;
-        if(n && p) { pushItem(n, parseInt(p)); document.getElementById('manualN').value=''; document.getElementById('manualP').value=''; }
+    function addM() {
+        const n = document.getElementById('mName').value;
+        const p = document.getElementById('mPrice').value;
+        if(n && p) { add(n, parseInt(p)); document.getElementById('mName').value=''; document.getElementById('mPrice').value=''; }
     }
 
-    function pushItem(n, p) {
-        items.push({n, p});
-        updateTable();
+    function add(n, p) {
+        active.push({n, p});
+        render();
     }
 
-    function updateTable() {
-        const body = document.getElementById('billBody');
-        body.innerHTML = '';
+    function render() {
+        const l = document.getElementById('list');
+        l.innerHTML = '';
         let s = 0;
-        items.forEach((it, i) => {
-            s += it.p;
-            body.innerHTML += `<tr><td>${it.n}</td><td style="text-align:right">${it.p}</td><td class="del-col no-print" onclick="items.splice(${i},1);updateTable()" style="color:red; cursor:pointer; text-align:center;">✖</td></tr>`;
+        active.forEach((x, i) => {
+            s += x.p;
+            l.innerHTML += `<tr><td>${x.n}</td><td style="text-align:right">${x.p}</td><td class="del-btn" style="color:red; cursor:pointer" onclick="active.splice(${i},1);render()">X</td></tr>`;
         });
-        document.getElementById('subT').innerText = s;
-        calculate();
+        document.getElementById('sum').innerText = s;
+        calc();
     }
 
-    function calculate() {
-        const s = parseInt(document.getElementById('subT').innerText);
-        const d = parseInt(document.getElementById('discIn').value) || 0;
-        document.getElementById('netT').innerText = s - d;
+    function calc() {
+        const s = parseInt(document.getElementById('sum').innerText);
+        const d = parseInt(document.getElementById('dsc').value) || 0;
+        document.getElementById('net').innerText = s - d;
     }
 
-    function saveAndPrint() {
-        const name = document.getElementById('pName').value;
-        if(!name) return alert("Enter Patient Name");
-        
-        records.push({ id: currentInv, name: name, mob: document.getElementById('pMob').value, date: new Date().toLocaleDateString(), total: document.getElementById('netT').innerText });
-        localStorage.setItem('p_records', JSON.stringify(records));
-        
+    function doPrint() {
+        if(!document.getElementById('pName').value) return alert("Enter Name");
         window.print();
-        localStorage.setItem('p_inv_2026', parseInt(currentInv) + 1);
+        localStorage.setItem('patel_inv', parseInt(inv) + 1);
         location.reload();
     }
 
-    function sendWA() {
+    function doWA() {
         const name = document.getElementById('pName').value;
         const mob = document.getElementById('pMob').value;
-        const total = document.getElementById('netT').innerText;
-        
-        html2pdf().from(document.getElementById('printArea')).set({ margin: 10, filename: `Bill_${name}.pdf`, jsPDF: { format: 'a5' } }).save();
-
-        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInv No: ${currentInv}%0APatient: ${name}%0ATotal: ₹${total}%0A_PDF Bill Attached Below._`;
+        const net = document.getElementById('net').innerText;
+        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInv: ${inv}%0APatient: ${name}%0ATotal: ₹${net}%0A_Report will be sent soon._`;
         window.open(`https://wa.me/91${mob}?text=${text}`, '_blank');
-    }
-
-    function findHist() {
-        const q = document.getElementById('histSearch').value.toLowerCase();
-        const out = document.getElementById('histOutput');
-        out.innerHTML = '';
-        if(!q) return;
-        records.filter(r => r.name.toLowerCase().includes(q) || r.mob.includes(q)).reverse().forEach(r => {
-            out.innerHTML += `<div style="padding:5px; border-bottom:1px solid #eee;">#${r.id} | ${r.name} | ₹${r.total}</div>`;
-        });
     }
 </script>
 </body>
