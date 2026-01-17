@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Patel Diagnostic - Final Locked System</title>
+    <title>Patel Diagnostic - Professional Billing</title>
     <style>
         /* A4 Layout & Professional B&W Print Logic */
         @media print {
             @page { size: A4; margin: 0; }
             body { margin: 0; padding: 0; background: #fff !important; color: #000; }
-            .no-print { display: none !important; }
-            .invoice-shell { border: none !important; width: 100% !important; margin: 0 !important; padding: 10mm !important; }
+            /* FORCE LOGIN SCREEN HIDDEN IN PRINT */
+            #lock, .no-print, .del-col { display: none !important; visibility: hidden !important; }
+            .invoice-shell { border: none !important; width: 100% !important; margin: 0 !important; padding: 10mm !important; display: block !important; }
             .disc-row:not(.has-value) { display: none !important; }
-            .del-col { display: none !important; }
-            input { border: none !important; }
+            input { border: none !important; outline: none !important; }
         }
 
         body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 20px; color: #333; }
@@ -67,9 +67,9 @@
 
 <div id="lock">
     <div class="lock-box">
-        <h2 style="margin-top:0">Patel Diagnostic Admin</h2>
-        <input type="password" id="pass" placeholder="Password: Patel@2025" style="width:280px"><br><br>
-        <button onclick="login()" style="background:#000; color:#fff; width:100%">Access Billing System</button>
+        <h2 style="margin-top:0">Admin Login</h2>
+        <input type="password" id="pass" placeholder="Enter Administrator Password" style="width:280px"><br><br>
+        <button onclick="login()" style="background:#000; color:#fff; width:100%">Enter</button>
     </div>
 </div>
 
@@ -122,7 +122,7 @@
     <div style="background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
         <span class="panel-label">History Search (Old Records)</span>
         <div class="search-container">
-            <input type="text" id="histSearch" placeholder="Find previous bill by name or mobile..." style="width: 100%; box-sizing: border-box;" onkeyup="searchHistory()">
+            <input type="text" id="histSearch" placeholder="Search previous bills..." style="width: 100%; box-sizing: border-box;" onkeyup="searchHistory()">
             <div id="histDropdown"></div>
         </div>
     </div>
@@ -136,14 +136,14 @@
         <input type="number" id="inDisc" placeholder="Discount" oninput="updateView()">
     </div>
 
-    <span class="panel-label">Add Tests from Database</span>
+    <span class="panel-label">Add Tests</span>
     <div class="search-container">
-        <input type="text" id="search" placeholder="🔍 Search Test Name..." style="width: 100%; box-sizing: border-box; border: 2px solid #000;" onkeyup="searchSheet()">
+        <input type="text" id="search" placeholder="Search Test Name..." style="width: 100%; box-sizing: border-box; border: 2px solid #000;" onkeyup="searchSheet()">
         <div id="dropdown"></div>
     </div>
 
     <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="manN" placeholder="Manual Test Name" style="flex:2">
+        <input type="text" id="manN" placeholder="Manual Name" style="flex:2">
         <input type="number" id="manP" placeholder="Price" style="flex:1">
         <button onclick="addManual()" style="background:#3498db; color:#fff">Add Test</button>
     </div>
@@ -160,7 +160,7 @@
     let currentBill = [];
     let lastInv = localStorage.getItem('inv_2026') || 20260001;
     
-    // Updated with your New Script ID
+    // Script ID Integrated
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw/exec";
 
     function login() {
@@ -178,7 +178,6 @@
         const historySid = '1ssyQG81ds_9ZAAXoF9AUUK4bdOxR_exV2BqMpqxEOvU';
 
         try {
-            // Load Prices
             const r1 = await fetch(`https://docs.google.com/spreadsheets/d/${priceSid}/gviz/tq?tqx=out:csv`);
             const c1 = await r1.text();
             testPriceDB = c1.split('\n').slice(1).map(r => {
@@ -186,14 +185,13 @@
                 return { n: col[1]?.replace(/"/g,''), p: parseInt(col[2]?.replace(/"/g,'')) || 0 };
             }).filter(x => x.n);
 
-            // Load History
             const r2 = await fetch(`https://docs.google.com/spreadsheets/d/${historySid}/gviz/tq?tqx=out:csv`);
             const c2 = await r2.text();
             historyDB = c2.split('\n').slice(1).map(r => {
                 const col = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 return { id: col[0], name: col[1], mob: col[2], total: col[3], date: col[4] };
             });
-        } catch(e) { console.log("Database Syncing..."); }
+        } catch(e) { console.log("Updating Database..."); }
     }
 
     function searchSheet() {
@@ -271,10 +269,10 @@
 
     async function saveAndPrint() {
         const name = document.getElementById('inName').value;
-        if(!name || currentBill.length === 0) return alert("Fill Name and Add Tests.");
+        if(!name || currentBill.length === 0) return alert("Enter Name and Tests.");
 
         const saveBtn = document.getElementById('saveBtn');
-        saveBtn.innerText = "UPLOADING TO CLOUD...";
+        saveBtn.innerText = "SAVING...";
         saveBtn.disabled = true;
 
         const record = {
@@ -287,15 +285,16 @@
         };
 
         try {
-            // Using standard POST for Google Script Web App
             await fetch(APPS_SCRIPT_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Essential for Google Script
+                mode: 'no-cors',
                 body: JSON.stringify(record)
             });
-        } catch(e) { console.error("Network sync issue."); }
+        } catch(e) { console.log("Sync delay..."); }
 
+        // Trigger print - The CSS @media print now ensures login is hidden
         window.print();
+        
         localStorage.setItem('inv_2026', parseInt(lastInv) + 1);
         location.reload();
     }
@@ -304,7 +303,7 @@
         const name = document.getElementById('inName').value;
         const net = document.getElementById('outNet').innerText;
         const mob = document.getElementById('inMob').value;
-        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInvoice: ${lastInv}%0APatient: ${name}%0ATotal Amount: ₹${net}%0A_Reports will be ready soon._`;
+        const text = `*PATEL DIAGNOSTIC UDAIPUR*%0AInvoice: ${lastInv}%0APatient: ${name}%0ATotal Amount: ₹${net}%0A_Report will be sent soon._`;
         window.open(`https://wa.me/91${mob}?text=${text}`, '_blank');
     }
 </script>
