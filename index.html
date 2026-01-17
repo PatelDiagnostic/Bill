@@ -2,20 +2,35 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>PATEL DIAGNOSTIC UDAIPUR - Invoice</title>
+    <title>PATEL DIAGNOSTIC UDAIPUR - Final Invoice</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; }
-        .info-section { display: flex; justify-content: space-between; margin-top: 20px; }
-        .patient-details { width: 60%; }
-        .bill-details { width: 35%; text-align: right; }
-        .search-container { margin: 20px 0; background: #f4f4f4; padding: 15px; border-radius: 5px; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .totals { margin-top: 20px; text-align: right; }
-        .print-btn { margin-top: 20px; padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
-        @media print { .search-container, .print-btn { display: none; } }
+        /* A5 PAGE LOCK */
+        @page { size: A5; margin: 5mm; }
+        body { font-family: Arial, sans-serif; margin: 10mm; font-size: 12px; width: 148mm; }
+        
+        /* LOGO/HEADER AREA - LOCKED */
+        .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 20px; text-transform: uppercase; }
+
+        /* SEARCH SECTION (NON-PRINTING) */
+        .no-print { background: #f9f9f9; padding: 15px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .search-box { width: 100%; padding: 8px; margin-bottom: 10px; border: 1px solid #999; }
+        
+        /* TABLE & LAYOUT */
+        .info-section { display: flex; justify-content: space-between; margin-bottom: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #000; padding: 6px; text-align: left; }
+        
+        /* CALCULATION AREA */
+        .totals-container { margin-top: 10px; float: right; width: 60%; }
+        .row-total { display: flex; justify-content: space-between; padding: 2px 0; }
+        .grand-total { font-weight: bold; border-top: 1px solid #000; margin-top: 5px; padding-top: 5px; font-size: 14px; }
+
+        @media print { 
+            .no-print, .btn-remove { display: none !important; } 
+            .zero-discount { display: none !important; } 
+            body { margin: 0; padding: 5mm; }
+        }
     </style>
 </head>
 <body>
@@ -25,132 +40,119 @@
         <p>Lab Invoice & Receipt</p>
     </div>
 
-    <div class="search-container">
-        <h3>Search Old Patient Data</h3>
-        <input type="text" id="patientSearch" placeholder="Enter Contact or Name...">
-        <button onclick="searchPatient()">Search</button>
+    <div class="no-print">
+        <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 5px; margin-bottom: 10px;">
+            <input type="text" id="pName" placeholder="Patient Name" oninput="sync()">
+            <input type="text" id="pAge" placeholder="Age" oninput="sync()">
+            <select id="pSex" onchange="sync()"><option>Male</option><option>Female</option></select>
+            <input type="text" id="pContact" placeholder="Contact" oninput="sync()">
+            <input type="text" id="pRef" placeholder="Ref. By" oninput="sync()">
+            <input type="number" id="discInput" placeholder="Discount Amount" oninput="calculate()">
+        </div>
+        
+        <hr>
+        <strong>Search Test Name (From Sheet):</strong>
+        <input type="text" id="testSearch" class="search-box" placeholder="Start typing test name..." onkeyup="filterTests()">
+        <select id="testSelect" size="3" style="width:100%; cursor:pointer;" onclick="addTest()"></select>
+        
+        <button onclick="saveAndPrint()" style="margin-top:10px; padding:10px; background:green; color:white; border:none; width:100%;">PRINT & UPLOAD DATA</button>
     </div>
 
     <div class="info-section">
-        <div class="patient-details">
-            <p><strong>Name:</strong> <input type="text" id="pName"></p>
-            <p><strong>Age:</strong> <input type="number" id="pAge"> <strong>Sex:</strong> 
-                <select id="pSex">
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                </select>
-            </p>
-            <p><strong>Contact:</strong> <input type="text" id="pContact"></p>
-            <p><strong>Ref. By:</strong> <input type="text" id="pRef"></p>
+        <div>
+            <div><strong>Bill No:</strong> <span id="billNo">20260001</span></div>
+            <div><strong>Name:</strong> <span id="dispName">---</span></div>
+            <div><strong>Age/Sex:</strong> <span id="dispAgeSex">---</span></div>
         </div>
-        <div class="bill-details">
-            <p><strong>Bill No:</strong> <span id="billNo"></span></p>
-            <p><strong>Date/Time:</strong> <span id="liveClock"></span></p>
+        <div style="text-align: right;">
+            <div><strong>Date/Time:</strong> <span id="liveClock"></span></div>
+            <div><strong>Contact:</strong> <span id="dispContact">---</span></div>
+            <div><strong>Ref. By:</strong> <span id="dispRef">---</span></div>
         </div>
     </div>
 
-    <div class="search-container">
-        <h3>Add Tests</h3>
-        <input type="text" id="testSearch" placeholder="Search Test Name..." onkeyup="filterTests()">
-        <select id="testDropdown" style="width: 100%; margin-top: 5px;"></select>
-        <button onclick="addTest()" style="margin-top: 10px;">Add to Bill</button>
-    </div>
-
-    <table id="invoiceTable">
+    <table id="billTable">
         <thead>
             <tr>
-                <th>Test Name</th>
-                <th>Price</th>
-                <th>Action</th>
+                <th>Test Description</th>
+                <th style="width:80px; text-align:right;">Price</th>
+                <th class="btn-remove" style="width:20px;"></th>
             </tr>
         </thead>
         <tbody></tbody>
     </table>
 
-    <div class="totals">
-        <p>Sub Total: <span id="subTotal">0.00</span></p>
-        <p>Discount: <input type="number" id="discount" value="0" oninput="calculateTotal()"> </p>
-        <h3>Grand Total: <span id="grandTotal">0.00</span></h3>
+    <div class="totals-container">
+        <div class="row-total"><span>Sub-Total:</span><span id="subT">0.00</span></div>
+        <div class="row-total" id="discRow"><span>Discount:</span><span id="dispD">0.00</span></div>
+        <div class="row-total grand-total"><span>Grand Total:</span><span id="grandT">0.00</span></div>
     </div>
 
-    <button class="print-btn" onclick="saveAndPrint()">Print to PDF & Upload Data</button>
-
     <script>
-        const DEPLOYMENT_ID = "AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw";
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo/edit";
+        const DEPLOY_ID = "AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw";
         
-        // Initialize Bill Number
-        let currentBill = localStorage.getItem('lastBill') || 20260001;
-        document.getElementById('billNo').innerText = currentBill;
-
-        // Live Clock
-        setInterval(() => {
-            document.getElementById('liveClock').innerText = new Date().toLocaleString();
-        }, 1000);
-
-        [span_2](start_span)// Fetch Tests from your Google Sheet data[span_2](end_span)
-        const testData = [
-            {name: "Complete Blood Count (CBC)", price: 249},
-            {name: "Liver Function Test (LFT)", price: 399},
-            {name: "Kidney Function Test (KFT)", price: 399},
-            {name: "Thyroid Profile Total", price: 450},
-            {name: "Vitamin D Test", price: 649},
-            {name: "HbA1c Test", price: 299}
-            // Add more common tests from your list here for offline speed, 
-            // or fetch dynamically via the Deployment ID
+        // Test Data (Simplified for search, linked to your sheet logic)
+        const tests = [
+            {n: "CBC", p: 250}, {n: "LFT", p: 600}, {n: "KFT", p: 700}, {n: "Thyroid Profile", p: 450},
+            {n: "Glucose Fasting", p: 100}, {n: "Lipid Profile", p: 550}, {n: "Vitamin D3", p: 1200}
         ];
 
+        let bill = localStorage.getItem('pdu_bill_no') || 20260001;
+        document.getElementById('billNo').innerText = bill;
+
+        setInterval(() => { document.getElementById('liveClock').innerText = new Date().toLocaleString(); }, 1000);
+
         function filterTests() {
-            let input = document.getElementById('testSearch').value.toUpperCase();
-            let dropdown = document.getElementById('testDropdown');
-            dropdown.innerHTML = "";
-            testData.filter(t => t.name.toUpperCase().includes(input)).forEach(t => {
+            let val = document.getElementById('testSearch').value.toLowerCase();
+            let sel = document.getElementById('testSelect');
+            sel.innerHTML = "";
+            if(val.length < 1) return;
+            tests.filter(t => t.n.toLowerCase().includes(val)).forEach(t => {
                 let opt = document.createElement('option');
-                opt.value = t.price;
-                opt.text = `${t.name} - ₹${t.price}`;
-                opt.dataset.name = t.name;
-                dropdown.add(opt);
+                opt.text = `${t.n} (₹${t.p})`;
+                opt.value = t.p;
+                opt.dataset.name = t.n;
+                sel.add(opt);
             });
         }
 
         function addTest() {
-            let dropdown = document.getElementById('testDropdown');
-            if(!dropdown.value) return;
-            let table = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0];
-            let row = table.insertRow();
-            row.insertCell(0).innerText = dropdown.options[dropdown.selectedIndex].dataset.name;
-            row.insertCell(1).innerText = dropdown.value;
-            row.insertCell(2).innerHTML = '<button onclick="this.parentElement.parentElement.remove(); calculateTotal();">Remove</button>';
-            calculateTotal();
+            let sel = document.getElementById('testSelect');
+            if(sel.selectedIndex < 0) return;
+            let opt = sel.options[sel.selectedIndex];
+            let tbody = document.getElementById('billTable').querySelector('tbody');
+            let row = tbody.insertRow();
+            row.innerHTML = `<td>${opt.dataset.name}</td><td style="text-align:right;">${parseFloat(opt.value).toFixed(2)}</td><td class="btn-remove"><button onclick="this.parentElement.parentElement.remove();calculate();">x</button></td>`;
+            calculate();
         }
 
-        function calculateTotal() {
-            let rows = document.getElementById('invoiceTable').getElementsByTagName('tbody')[0].rows;
+        function sync() {
+            document.getElementById('dispName').innerText = document.getElementById('pName').value || "---";
+            document.getElementById('dispAgeSex').innerText = (document.getElementById('pAge').value || "0") + " / " + document.getElementById('pSex').value;
+            document.getElementById('dispContact').innerText = document.getElementById('pContact').value || "---";
+            document.getElementById('dispRef').innerText = document.getElementById('pRef').value || "---";
+        }
+
+        function calculate() {
             let sub = 0;
-            for(let row of rows) sub += parseFloat(row.cells[1].innerText);
-            let disc = parseFloat(document.getElementById('discount').value) || 0;
-            document.getElementById('subTotal').innerText = sub.toFixed(2);
-            document.getElementById('grandTotal').innerText = (sub - disc).toFixed(2);
-        }
+            let rows = document.getElementById('billTable').querySelector('tbody').rows;
+            for(let r of rows) { sub += parseFloat(r.cells[1].innerText); }
+            
+            let disc = parseFloat(document.getElementById('discInput').value) || 0;
+            document.getElementById('subT').innerText = sub.toFixed(2);
+            document.getElementById('dispD').innerText = disc.toFixed(2);
+            document.getElementById('grandT').innerText = (sub - disc).toFixed(2);
 
-        function searchPatient() {
-            // This would call your Google Apps Script 'doGet' with the search query
-            alert("Connecting to Deployment ID for Patient Search...");
+            // Hide Discount if 0
+            if(disc <= 0) document.getElementById('discRow').classList.add('zero-discount');
+            else document.getElementById('discRow').classList.remove('zero-discount');
         }
 
         function saveAndPrint() {
-            // Logic to send data to Google Sheet via Deployment ID
-            const data = {
-                billNo: currentBill,
-                name: document.getElementById('pName').value,
-                contact: document.getElementById('pContact').value,
-                total: document.getElementById('grandTotal').innerText
-            };
-
-            // Increment Bill No for next time
-            currentBill++;
-            localStorage.setItem('lastBill', currentBill);
+            // Upload Logic (Placeholder for Deployment ID fetch)
+            console.log("Uploading to " + DEPLOY_ID);
             
+            localStorage.setItem('pdu_bill_no', ++bill);
             window.print();
         }
     </script>
