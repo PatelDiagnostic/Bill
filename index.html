@@ -2,28 +2,30 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patel Diagnostic - Smart Invoice</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patel Diagnostic - Final Locked System</title>
     <style>
-        /* A4 Reset */
+        /* A4 Layout & Professional B&W Print Logic */
         @media print {
             @page { size: A4; margin: 0; }
-            body { margin: 0; padding: 0; background: #fff !important; }
+            body { margin: 0; padding: 0; background: #fff !important; color: #000; }
             .no-print { display: none !important; }
-            .invoice-shell { border: none !important; box-shadow: none !important; width: 100% !important; margin: 0 !important; padding: 10mm !important; }
-            /* Only show discount row if it has the 'has-value' class */
+            .invoice-shell { border: none !important; width: 100% !important; margin: 0 !important; padding: 10mm !important; }
             .disc-row:not(.has-value) { display: none !important; }
+            .del-col { display: none !important; }
+            input { border: none !important; }
         }
 
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f0f2f5; margin: 20px; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f7f6; margin: 20px; color: #333; }
         
-        /* Lock Screen */
-        #lock { position: fixed; inset: 0; background: #1a1a1a; z-index: 1000; display: flex; justify-content: center; align-items: center; }
-        .lock-box { background: white; padding: 30px; border-radius: 8px; text-align: center; border: 2px solid #000; }
+        /* Security Overlay */
+        #lock { position: fixed; inset: 0; background: #2c3e50; z-index: 1000; display: flex; justify-content: center; align-items: center; }
+        .lock-box { background: white; padding: 30px; border-radius: 8px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
 
-        /* Invoice Layout (Upper A4) */
+        /* Invoice Shell (Fixed to Upper A4) */
         .invoice-shell { 
             width: 210mm; 
-            min-height: 140mm; 
+            min-height: 145mm; 
             background: white; 
             margin: auto; 
             padding: 15mm; 
@@ -32,7 +34,7 @@
         }
 
         .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
-        .header h1 { margin: 0; font-size: 26px; }
+        .header h1 { margin: 0; font-size: 28px; text-transform: uppercase; }
 
         .patient-info { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .patient-info td { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
@@ -44,32 +46,37 @@
         .summary-box { float: right; width: 250px; margin-top: 20px; border: 1px solid #000; padding: 10px; }
         .sum-line { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; }
         
-        /* This class is controlled by JavaScript */
-        .disc-row { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; border-top: 1px solid #eee; }
+        .disc-row { display: flex; justify-content: space-between; padding: 5px 0; font-weight: bold; border-top: 1px solid #eee; color: #d32f2f; }
         .disc-row:not(.has-value) { display: none; }
 
-        .control-panel { width: 210mm; margin: 20px auto; background: #fff; padding: 20px; border: 1px solid #ccc; border-radius: 8px; }
+        /* Control Dashboard */
+        .control-panel { width: 210mm; margin: 20px auto; background: #fff; padding: 25px; border-radius: 12px; border: 1px solid #ddd; }
         .search-container { position: relative; margin-bottom: 15px; }
-        #dropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; z-index: 500; max-height: 200px; overflow-y: auto; display: none; }
-        .drop-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
-        input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-        button { padding: 10px 20px; cursor: pointer; font-weight: bold; border: none; border-radius: 4px; }
+        #dropdown, #histDropdown { position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #ccc; z-index: 500; max-height: 200px; overflow-y: auto; display: none; box-shadow: 0 8px 16px rgba(0,0,0,0.1); }
+        .drop-item { padding: 12px; cursor: pointer; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; }
+        .drop-item:hover { background: #f0f7ff; }
+        
+        input { padding: 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px; }
+        button { padding: 12px 24px; cursor: pointer; font-weight: bold; border: none; border-radius: 6px; transition: 0.3s; }
+        .del-btn { color: #e74c3c; cursor: pointer; font-weight: bold; font-size: 18px; }
+        
+        .panel-label { display: block; font-size: 12px; font-weight: bold; color: #7f8c8d; margin-bottom: 5px; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
 <div id="lock">
     <div class="lock-box">
-        <h2>Patel Diagnostic Admin</h2>
-        <input type="password" id="pass" placeholder="Enter Password"><br><br>
-        <button onclick="login()" style="background:#000; color:#fff">Enter System</button>
+        <h2 style="margin-top:0">Patel Diagnostic Admin</h2>
+        <input type="password" id="pass" placeholder="Password: Patel@2025" style="width:280px"><br><br>
+        <button onclick="login()" style="background:#000; color:#fff; width:100%">Access Billing System</button>
     </div>
 </div>
 
-<div class="invoice-shell">
+<div class="invoice-shell" id="billArea">
     <div class="header">
         <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
-        <p>Titaradi, Udaipur | Contact: 8209746239</p>
+        <p>Titaradi, Udaipur | 8209746239 | Professional Lab Services</p>
     </div>
 
     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 10px; font-weight:bold;">
@@ -79,7 +86,7 @@
 
     <table class="patient-info">
         <tr>
-            <td><b>Patient:</b> <span id="outName"></span></td>
+            <td style="width:50%"><b>Patient Name:</b> <span id="outName"></span></td>
             <td><b>Age/Sex:</b> <span id="outAge"></span></td>
         </tr>
         <tr>
@@ -91,8 +98,9 @@
     <table class="items-table">
         <thead>
             <tr>
-                <th style="width: 75%;">Test Description</th>
-                <th style="width: 25%; text-align: right;">Amount (₹)</th>
+                <th style="width: 75%;">Test Particulars</th>
+                <th style="width: 15%; text-align: right;">Price (₹)</th>
+                <th class="no-print del-col" style="width: 10%; text-align: center;">Edit</th>
             </tr>
         </thead>
         <tbody id="outItems"></tbody>
@@ -103,65 +111,89 @@
         <div id="discRow" class="disc-row">
             <span>Discount:</span> <span>- ₹<span id="outDisc">0</span></span>
         </div>
-        <div class="sum-line" style="font-size: 18px; border-top: 2px solid #000; padding-top: 10px; margin-top: 5px;">
-            <span>NET TOTAL:</span> <span>₹<span id="outNet">0</span></span>
+        <div class="sum-line" style="font-size: 20px; border-top: 2px solid #000; padding-top: 10px; margin-top: 5px;">
+            <span>NET PAYABLE:</span> <span>₹<span id="outNet">0</span></span>
         </div>
     </div>
     <div style="clear: both;"></div>
 </div>
 
 <div class="control-panel no-print">
-    <h3>1. Patient & Discount</h3>
+    <div style="background: #eef2f7; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+        <span class="panel-label">History Search (Old Records)</span>
+        <div class="search-container">
+            <input type="text" id="histSearch" placeholder="Find previous bill by name or mobile..." style="width: 100%; box-sizing: border-box;" onkeyup="searchHistory()">
+            <div id="histDropdown"></div>
+        </div>
+    </div>
+
+    <span class="panel-label">Patient & Discount Details</span>
     <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 20px;">
         <input type="text" id="inName" placeholder="Name" oninput="updateView()">
         <input type="text" id="inAge" placeholder="Age/Sex" oninput="updateView()">
         <input type="text" id="inMob" placeholder="Mobile" oninput="updateView()">
         <input type="text" id="inRef" value="Self" oninput="updateView()">
-        <input type="number" id="inDisc" placeholder="Discount ₹" oninput="updateView()">
+        <input type="number" id="inDisc" placeholder="Discount" oninput="updateView()">
     </div>
 
-    <h3>2. Add Tests</h3>
+    <span class="panel-label">Add Tests from Database</span>
     <div class="search-container">
-        <input type="text" id="search" placeholder="🔍 Search Database..." style="width: 100%; border: 2px solid #000;" onkeyup="searchSheet()">
+        <input type="text" id="search" placeholder="🔍 Search Test Name..." style="width: 100%; box-sizing: border-box; border: 2px solid #000;" onkeyup="searchSheet()">
         <div id="dropdown"></div>
     </div>
 
     <div style="display: flex; gap: 10px; margin-top: 10px;">
-        <input type="text" id="manN" placeholder="Manual Name" style="flex:2">
+        <input type="text" id="manN" placeholder="Manual Test Name" style="flex:2">
         <input type="number" id="manP" placeholder="Price" style="flex:1">
-        <button onclick="addManual()" style="background:#007bff; color:#fff">Add Test</button>
+        <button onclick="addManual()" style="background:#3498db; color:#fff">Add Test</button>
     </div>
 
-    <div style="margin-top: 30px; text-align: center;">
-        <button onclick="printNow()" style="background:#000; color:#fff; padding: 15px 40px;">PRINT & SAVE</button>
-        <button onclick="waShare()" style="background:#25d366; color:#fff; padding: 15px 40px; margin-left:10px;">WHATSAPP</button>
+    <div style="margin-top: 30px; text-align: center; border-top: 1px solid #eee; padding-top: 20px;">
+        <button id="saveBtn" onclick="saveAndPrint()" style="background:#000; color:#fff; padding: 15px 60px; font-size: 16px;">SAVE & PRINT INVOICE</button>
+        <button onclick="waShare()" style="background:#27ae60; color:#fff; padding: 15px 40px; font-size: 16px; margin-left:10px;">WHATSAPP BILL</button>
     </div>
 </div>
 
 <script>
-    let sheetDB = [];
-    let billList = [];
+    let testPriceDB = [];
+    let historyDB = [];
+    let currentBill = [];
     let lastInv = localStorage.getItem('inv_2026') || 20260001;
+    
+    // Updated with your New Script ID
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzTEpSNc5B2tfFdbDHHau3HTvrjODiEOXJS2TPXtSw/exec";
 
     function login() {
         if(document.getElementById('pass').value === "Patel@2025") {
             document.getElementById('lock').style.display = 'none';
-            setup();
+            setupData();
         } else { alert("Incorrect Password"); }
     }
 
-    async function setup() {
+    async function setupData() {
         document.getElementById('dispInv').innerText = lastInv;
         document.getElementById('dispDate').innerText = "Date: " + new Date().toLocaleDateString();
-        const sid = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
+        
+        const priceSid = '1_IFDJ3C5tyGHSY-pR4LSqq-mIT8Rgpx6EDDfh17zzvo';
+        const historySid = '1ssyQG81ds_9ZAAXoF9AUUK4bdOxR_exV2BqMpqxEOvU';
+
         try {
-            const res = await fetch(`https://docs.google.com/spreadsheets/d/${sid}/gviz/tq?tqx=out:csv`);
-            const csv = await res.text();
-            sheetDB = csv.split('\n').slice(1).map(r => {
-                const c = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                return { n: c[1]?.replace(/"/g,''), p: parseInt(c[2]?.replace(/"/g,'')) || 0 };
+            // Load Prices
+            const r1 = await fetch(`https://docs.google.com/spreadsheets/d/${priceSid}/gviz/tq?tqx=out:csv`);
+            const c1 = await r1.text();
+            testPriceDB = c1.split('\n').slice(1).map(r => {
+                const col = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return { n: col[1]?.replace(/"/g,''), p: parseInt(col[2]?.replace(/"/g,'')) || 0 };
             }).filter(x => x.n);
-        } catch(e) { console.error("Sheet Error"); }
+
+            // Load History
+            const r2 = await fetch(`https://docs.google.com/spreadsheets/d/${historySid}/gviz/tq?tqx=out:csv`);
+            const c2 = await r2.text();
+            historyDB = c2.split('\n').slice(1).map(r => {
+                const col = r.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                return { id: col[0], name: col[1], mob: col[2], total: col[3], date: col[4] };
+            });
+        } catch(e) { console.log("Database Syncing..."); }
     }
 
     function searchSheet() {
@@ -169,11 +201,25 @@
         const d = document.getElementById('dropdown');
         d.innerHTML = '';
         if(!q) { d.style.display = 'none'; return; }
-        sheetDB.filter(x => x.n.toLowerCase().includes(q)).slice(0, 10).forEach(m => {
+        testPriceDB.filter(x => x.n.toLowerCase().includes(q)).slice(0, 10).forEach(m => {
             const row = document.createElement('div');
             row.className = 'drop-item';
             row.innerHTML = `<span>${m.n}</span> <b>₹${m.p}</b>`;
             row.onclick = () => { addTest(m.n, m.p); d.style.display = 'none'; document.getElementById('search').value = ''; };
+            d.appendChild(row);
+        });
+        d.style.display = 'block';
+    }
+
+    function searchHistory() {
+        const q = document.getElementById('histSearch').value.toLowerCase();
+        const d = document.getElementById('histDropdown');
+        d.innerHTML = '';
+        if(!q) { d.style.display = 'none'; return; }
+        historyDB.filter(x => x.name?.toLowerCase().includes(q) || x.mob?.includes(q)).slice(0, 5).forEach(h => {
+            const row = document.createElement('div');
+            row.className = 'drop-item';
+            row.innerHTML = `<span>#${h.id} - ${h.name}</span> <span style="font-size:11px">₹${h.total} (${h.date})</span>`;
             d.appendChild(row);
         });
         d.style.display = 'block';
@@ -186,7 +232,12 @@
     }
 
     function addTest(n, p) {
-        billList.push({n, p});
+        currentBill.push({n, p});
+        updateView();
+    }
+
+    function removeTest(index) {
+        currentBill.splice(index, 1);
         updateView();
     }
 
@@ -196,31 +247,54 @@
         document.getElementById('outMob').innerText = document.getElementById('inMob').value;
         document.getElementById('outRef').innerText = document.getElementById('inRef').value;
 
-        const tableBody = document.getElementById('outItems');
-        tableBody.innerHTML = '';
+        const body = document.getElementById('outItems');
+        body.innerHTML = '';
         let sub = 0;
-        billList.forEach((it) => {
+        currentBill.forEach((it, i) => {
             sub += it.p;
-            tableBody.innerHTML += `<tr><td>${it.n}</td><td style="text-align:right">${it.p}</td></tr>`;
+            body.innerHTML += `<tr><td>${it.n}</td><td style="text-align:right">${it.p}</td><td class="no-print del-col" onclick="removeTest(${i})"><span class="del-btn">✖</span></td></tr>`;
         });
 
-        const discount = parseInt(document.getElementById('inDisc').value) || 0;
+        const disc = parseInt(document.getElementById('inDisc').value) || 0;
         const discRow = document.getElementById('discRow');
         
-        // Logical check: If discount > 0, show the row. Otherwise, hide it.
-        if (discount > 0) {
+        if (disc > 0) {
             discRow.classList.add('has-value');
-            document.getElementById('outDisc').innerText = discount;
+            document.getElementById('outDisc').innerText = disc;
         } else {
             discRow.classList.remove('has-value');
         }
 
         document.getElementById('outSub').innerText = sub;
-        document.getElementById('outNet').innerText = sub - discount;
+        document.getElementById('outNet').innerText = sub - disc;
     }
 
-    function printNow() {
-        if(!document.getElementById('inName').value) return alert("Enter Patient Name");
+    async function saveAndPrint() {
+        const name = document.getElementById('inName').value;
+        if(!name || currentBill.length === 0) return alert("Fill Name and Add Tests.");
+
+        const saveBtn = document.getElementById('saveBtn');
+        saveBtn.innerText = "UPLOADING TO CLOUD...";
+        saveBtn.disabled = true;
+
+        const record = {
+            id: lastInv,
+            name: name,
+            mobile: document.getElementById('inMob').value,
+            total: document.getElementById('outNet').innerText,
+            tests: currentBill.map(x => x.n).join(", "),
+            date: new Date().toLocaleDateString()
+        };
+
+        try {
+            // Using standard POST for Google Script Web App
+            await fetch(APPS_SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Essential for Google Script
+                body: JSON.stringify(record)
+            });
+        } catch(e) { console.error("Network sync issue."); }
+
         window.print();
         localStorage.setItem('inv_2026', parseInt(lastInv) + 1);
         location.reload();
