@@ -2,257 +2,195 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A4 Full Width Invoice - Patel Diagnostic Udaipur</title>
+    <title>Patel Diagnostic Udaipur - Final</title>
     <style>
-        /* Classic Professional Typography */
-        body { 
-            font-family: "Times New Roman", Times, serif; 
-            color: #000; 
-            margin: 0; 
-            padding: 0; 
-            background: #f4f4f4; 
-        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 10px; background: #f4f4f4; }
+        .invoice-box { width: 210mm; height: 148.5mm; background: white; margin: auto; padding: 10mm; box-sizing: border-box; border-bottom: 2px dashed #bbb; position: relative; }
         
-        /* A4 Full Width Container */
-        .invoice-container { 
-            width: 210mm; /* Full A4 Width */
-            min-height: 148mm; /* A5 Height for a landscape-style or half-page feel */
-            padding: 15mm;
-            margin: 20px auto;
-            background: #fff;
-            box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
+        .header { text-align: center; border-bottom: 3px solid #d35400; padding-bottom: 5px; margin-bottom: 12px; }
+        .header h1 { margin: 0; color: #d35400; font-size: 24pt; text-transform: uppercase; }
+        .header p { margin: 2px 0; font-size: 10pt; font-weight: bold; }
 
-        /* Lab Header - No Logo as per request */
-        .lab-heading { text-align: center; margin-bottom: 25px; }
-        .lab-heading h1 { margin: 0; font-size: 26px; letter-spacing: 1.5px; text-transform: uppercase; }
-        .lab-heading p { margin: 5px 0; font-size: 14px; }
+        .customer-info { display: grid; grid-template-columns: 1.5fr 1fr 0.5fr 0.5fr; gap: 8px; margin-bottom: 12px; font-size: 10pt; }
+        .info-item { border-bottom: 1px solid #ccc; padding: 5px 0; display: flex; align-items: center; }
+        .info-item b { margin-right: 5px; color: #555; }
+        .required-field { border-bottom: 2px solid #e74c3c !important; }
+        input { border: none; width: 100%; outline: none; font-size: 10pt; background: transparent; }
 
-        /* Patient Info - Exact 3 Line Structure */
-        .info-section {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
-            font-size: 16px;
-        }
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 0.5px solid #ddd;
-            padding-bottom: 5px;
-        }
-        .info-item { display: flex; align-items: center; }
-        .info-item span { font-weight: bold; margin-right: 8px; }
-        .info-item input { 
-            border: none; 
-            font-family: "Times New Roman", serif; 
-            font-size: 16px; 
-            outline: none;
-            background: transparent;
-            width: 250px;
-        }
+        .controls { background: #eef2f3; padding: 15px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 10px; border: 1px solid #ddd; }
+        #testSearch { flex-grow: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .btn-add { background: #2980b9; color: white; }
+        .btn-manual { background: #8e44ad; color: white; }
 
-        /* Table Design - Simple Lines */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { 
-            text-align: left; 
-            border-bottom: 1.5px solid #000; 
-            padding: 10px 5px; 
-            font-size: 15px; 
-        }
-        td { padding: 12px 5px; border-bottom: 0.5px solid #eee; font-size: 15px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 10pt; }
+        th { background: #2c3e50; color: white; padding: 8px; text-align: left; }
+        td { border: 1px solid #ccc; padding: 8px; }
+        .text-right { text-align: right; }
 
-        /* Totals Area */
-        .totals { float: right; width: 250px; text-align: right; margin-top: 30px; }
-        .discount-row { font-size: 14px; color: #555; margin-bottom: 5px; }
-        .total-line { 
-            border-top: 1.5px solid #000; 
-            margin-top: 8px; 
-            padding-top: 8px; 
-            font-weight: bold; 
-            font-size: 18px; 
-        }
+        .summary { float: right; width: 35%; margin-top: 10px; }
+        .sum-row { display: flex; justify-content: space-between; padding: 4px 0; }
+        .grand-total { font-weight: bold; font-size: 14pt; border-top: 2px solid #d35400; color: #d35400; padding-top: 5px; }
 
-        .hide-discount { display: none !important; }
-
-        /* UI Controls - Hidden during Print */
-        .no-print { 
-            max-width: 210mm; 
-            margin: 10px auto; 
-            padding: 20px; 
-            background: #fff; 
-            border: 1px solid #ccc; 
-            font-family: Arial, sans-serif;
-        }
-        .btn { 
-            padding: 10px 20px; 
-            cursor: pointer; 
-            border: 1px solid #000; 
-            background: #fff; 
-            font-weight: bold;
-            margin-right: 10px;
-        }
-        .btn-save { background: #e67e22; color: #fff; border: none; }
-
-        /* Print Logic */
         @media print {
-            body { background: #fff; }
             .no-print { display: none !important; }
-            .invoice-container { margin: 0; border: none; width: 210mm; padding: 15mm; box-shadow: none; }
-            @page { size: A4; margin: 0; }
+            body { background: white; padding: 0; }
+            .invoice-box { border: none; height: auto; padding: 5mm; }
         }
     </style>
 </head>
-<body>
+<body onload="initInvoice()">
 
-<div class="no-print">
-    <div style="margin-bottom: 15px;">
-        🔍 History: <input type="text" id="histSearch" onkeyup="searchHistory()" placeholder="Search Name/Mobile..." style="width: 300px; padding: 8px;">
-        🔬 Test: <input type="text" id="search" onkeyup="searchSheet()" placeholder="Search Test List..." style="width: 300px; padding: 8px;">
-        <button class="btn" onclick="addManualRow()">+ Add Manual Test</button>
-    </div>
-    <button class="btn" onclick="generateNewInvoice()">🆕 New Bill</button>
-    <button class="btn btn-save" onclick="saveToSheet()">💾 Save to Sheet</button>
-    <button class="btn" onclick="window.print()">🖨️ Print Full Width A4</button>
-</div>
-
-<div class="invoice-container">
-    <div class="lab-heading">
+<div class="invoice-box">
+    <div class="header">
         <h1>PATEL DIAGNOSTIC UDAIPUR</h1>
         <p>Titaradi, Udaipur | Contact: 8209746239</p>
     </div>
 
-    <div class="info-section">
-        <div class="info-row">
-            <div class="info-item"><span>Invoice No:</span> <span id="invNo">20260001</span></div>
-            <div class="info-item"><span>Date & Time:</span> <span id="liveDateTime"></span></div>
-        </div>
-        <div class="info-row">
-            <div class="info-item"><span>Name:</span><input type="text" id="pName" placeholder=".............................."></div>
-            <div class="info-item"><span>Age:</span><input type="text" id="pAge" placeholder="...." style="width: 50px;"></div>
-            <div class="info-item"><span>Sex:</span><input type="text" id="pSex" placeholder="M/F" style="width: 80px;"></div>
-        </div>
-        <div class="info-row">
-            <div class="info-item"><span>Contact:</span><input type="text" id="pContact" placeholder=".............................."></div>
-            <div class="info-item"><span>Ref. By:</span><input type="text" id="pRef" placeholder=".............................."></div>
-        </div>
+    <div class="controls no-print">
+        <input type="text" id="testSearch" list="testList" placeholder="Search Test (e.g. CBC, Liver, Fever)">
+        <datalist id="testList"></datalist>
+        <button type="button" class="btn btn-add" onclick="addTest()">Add</button>
+        <button type="button" class="btn btn-manual" onclick="manualAdd()">Manual</button>
+    </div>
+
+    <div class="customer-info">
+        <div class="info-item" id="nameBox"><b>Name:*</b> <input type="text" id="pName" placeholder="Compulsory"></div>
+        <div class="info-item" id="ageBox"><b>Age:*</b> <input type="text" id="pAge" placeholder="Compulsory"></div>
+        <div class="info-item" id="sexBox"><b>Sex:*</b> <input type="text" id="pSex" placeholder="M/F"></div>
+        
+        <div class="info-item"><b>Inv No:</b> <span id="invNo" style="font-weight:bold;"></span></div>
+        <div class="info-item"><b>Date/Time:</b> <span id="liveClock" style="font-size: 8pt;"></span></div>
+        <div class="info-item" style="grid-column: span 2;"><b>Contact:</b> <input type="text" placeholder="Mobile"></div>
+        <div class="info-item" style="grid-column: span 4;"><b>Refer By:</b> <input type="text" placeholder="Doctor Name / Self"></div>
     </div>
 
     <table>
         <thead>
             <tr>
-                <th>Test Description</th>
-                <th style="width: 120px; text-align: right;">Amount (₹)</th>
+                <th width="8%">Sr.</th>
+                <th width="62%">Test Name</th>
+                <th class="text-right" width="20%">Base Rate (₹)</th>
+                <th class="no-print" width="10%">Act</th>
             </tr>
         </thead>
-        <tbody id="billingBody"></tbody>
+        <tbody id="billBody"></tbody>
     </table>
 
-    <div class="totals">
-        <div style="font-size: 14px;">Subtotal: ₹<span id="subtotal">0.00</span></div>
-        <div id="discountWrapper" class="discount-row hide-discount">
-            Discount: -₹<span id="discountVal">0.00</span>
+    <div class="summary">
+        <div class="sum-row"><span>Sub Total:</span> <span id="subTotal">0.00</span></div>
+        <div id="discRow" class="sum-row" style="color:#c0392b;">
+            <span>Discount (₹):</span> 
+            <input type="number" id="discInput" value="0" oninput="calculateTotal()" class="no-print" style="width: 70px; text-align: right;">
+            <span class="print-only" id="discDisplay">0.00</span>
         </div>
-        <div class="total-line">
-            Total Payable: ₹<span id="grandTotal">0.00</span>
-        </div>
-        <button class="no-print" onclick="applyDiscount()" style="font-size: 11px; margin-top: 10px; cursor: pointer;">Edit Discount</button>
-    </div>
-
-    <div style="clear: both; margin-top: 100px; text-align: center; font-size: 12px; font-style: italic; border-top: 0.5px solid #eee; padding-top: 10px;">
-        Computer Generated Invoice - Patel Diagnostic Udaipur
+        <div class="sum-row grand-total"><span>Total:</span> <span id="grandTotal">0.00</span></div>
     </div>
 </div>
 
+<div class="no-print" style="text-align: center; margin-top: 30px;">
+    <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 50px;">Print & Save Bill</button>
+</div>
+
 <script>
-    const GOOGLE_SCRIPT_URL = "YOUR_GOOGLE_SCRIPT_WEB_APP_URL";
+    // BASE RATES EXTRACTED FROM PDF
+    const baseRates = {
+        "Bharatfit Super Health Package": 1399, "One Plus One BharatFit Package-2": 2249, "One Plus One BharatFit Package-5": 3799, "Health Fit Package-4": 2200, "Semen Analysis": 400, "Dengue & Chikungunya RNA Detection PCR": 1899, "Fever Panel IV": 1499, "Fever Panel III": 1399, "Fever Panel I": 699, "Fatty Liver Screening Package": 1599, "Fever Plus Diagnostic Profile": 3999, "BharatFit Women-Comprehensive": 4499, "BharatFit Women-Advance": 3499, "BharatFit Women-Essential": 2499, "Haemogram (CBC + ESR + PS)": 499, "Sepsis Panel-Basic": 1599, "Fever Insta Check (CBC + CRP)": 549, "Aayush Package-5": 1299, "Aayush Package-1": 499, "BharatFit Super Advance": 3599, "BharatFit Advance": 3149, "Lipase, Fluid": 700, "Amylase, Fluid": 400, "BRCA 1 & 2 Mutation Analysis NGS": 8000, "Dengue IgG & IgM, Rapid": 550, "Dengue NS1, Rapid": 450, "BharatFit Senior Citizen Package- Female": 3149, "BharatFit Senior Citizen Package- Male": 3149, "BharatFit Healthy Heart Package": 2599, "Urine Profile": 899, "Malaria Screening Panel": 799, "Bumper Pocket Saver Package": 199, "Cholesterol Profile": 350, "BharatFit Package 4": 1849, "BharatFit Package-1": 899, "BharatFit Pro": 599, "Ante Natal Profile Basic": 800, "KFT Urine Routine": 500, "Peripheral Blood Smear": 100, "Absolute Basophils Count": 160, "Microalbumin-Creatinine Ratio": 240, "Fever Panel-Comprehensive": 1799, "HIV Early Screen": 700, "Vitamin D Test (25 Hydroxy)": 649, "Urine Routine & Microscopic": 50, "TSH 3rd Generation": 380, "Triglycerides": 180, "Total Protein": 70, "Thyroid Profile Total": 450, "SGPT/ALT": 100, "SGOT/AST": 100, "Liver Function Test (LFT)": 399, "Kidney Function Test (KFT)": 399, "HBA1C Test": 299, "Complete Hemogram (CBC & ESR)": 299, "Complete Blood Count (CBC)": 249, "Blood Group Test": 50, "Vitamin B12 Test": 549
+    };
 
-    // Live Clock
-    function updateDateTime() {
+    let items = [];
+
+    function updateClock() {
         const now = new Date();
-        document.getElementById('liveDateTime').innerText = now.toLocaleString('en-IN');
-    }
-    setInterval(updateDateTime, 1000);
-    updateDateTime();
-
-    // Invoice Serial
-    function loadInvoiceNumber() {
-        let lastInv = localStorage.getItem('lastInvoiceNo') || 20260001;
-        document.getElementById('invNo').innerText = lastInv;
+        document.getElementById('liveClock').innerText = now.toLocaleString('en-IN');
     }
 
-    function generateNewInvoice() {
-        if(confirm("Confirm: Move to next invoice number?")) {
-            let nextInv = parseInt(document.getElementById('invNo').innerText) + 1;
-            localStorage.setItem('lastInvoiceNo', nextInv);
-            location.reload(); 
-        }
-    }
-    loadInvoiceNumber();
-
-    // Billing Calculation
-    let subtotal = 0;
-    let discount = 0;
-
-    function addManualRow() {
-        const tbody = document.getElementById('billingBody');
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td><input type="text" placeholder="Enter Test Name" style="width:100%; border:none; outline:none; font-family:'Times New Roman'; font-size:15px;"></td>
-            <td style="text-align: right;"><input type="number" class="price-input" value="0" onchange="updateTotal()" style="width:100px; text-align:right; border:none; outline:none; font-family:'Times New Roman'; font-size:15px;"></td>
-            <td class="no-print" style="width:30px; text-align:right;"><button onclick="this.parentElement.parentElement.remove(); updateTotal();" style="border:none; color:#ccc; cursor:pointer; background:none;">x</button></td>
-        `;
-        tbody.appendChild(row);
-    }
-
-    function updateTotal() {
-        let total = 0;
-        document.querySelectorAll('.price-input').forEach(input => {
-            total += parseFloat(input.value) || 0;
-        });
-        subtotal = total;
+    function initInvoice() {
+        setInterval(updateClock, 1000);
+        updateClock();
+        document.getElementById('invNo').innerText = localStorage.getItem('lastInvPatel') || 20260001;
         
-        const discRow = document.getElementById('discountWrapper');
-        if (discount > 0) discRow.classList.remove('hide-discount');
-        else discRow.classList.add('hide-discount');
-
-        document.getElementById('subtotal').innerText = subtotal.toFixed(2);
-        document.getElementById('discountVal').innerText = discount.toFixed(2);
-        document.getElementById('grandTotal').innerText = (subtotal - discount).toFixed(2);
+        const dlist = document.getElementById('testList');
+        Object.keys(baseRates).sort().forEach(t => {
+            let opt = document.createElement('option');
+            opt.value = t;
+            dlist.appendChild(opt);
+        });
     }
 
-    function applyDiscount() {
-        let val = prompt("Enter Discount Amount (₹):", discount);
-        if (val !== null) {
-            discount = parseFloat(val) || 0;
-            updateTotal();
+    function addTest() {
+        const name = document.getElementById('testSearch').value;
+        if (baseRates[name]) {
+            items.push({ name: name, price: baseRates[name] });
+            render();
+            document.getElementById('testSearch').value = '';
+        } else if (name !== "") {
+            alert("Test not in system.");
         }
     }
 
-    // Google Sheets Save
-    async function saveToSheet() {
-        const data = {
-            invoiceNo: document.getElementById('invNo').innerText,
-            dateTime: document.getElementById('liveDateTime').innerText,
-            name: document.getElementById('pName').value,
-            age: document.getElementById('pAge').value,
-            sex: document.getElementById('pSex').value,
-            contact: document.getElementById('pContact').value,
-            refBy: document.getElementById('pRef').value,
-            total: document.getElementById('grandTotal').innerText
-        };
-        if(!data.name) return alert("Please enter patient name.");
-        try {
-            await fetch(GOOGLE_SCRIPT_URL, { method: "POST", mode: "no-cors", body: JSON.stringify(data) });
-            alert("Record Saved to Sheet!");
-        } catch (e) { alert("Error saving to sheet."); }
+    function manualAdd() {
+        const n = prompt("Test Name:");
+        const p = prompt("Base Price:");
+        if (n && p) {
+            items.push({ name: n, price: parseFloat(p) });
+            render();
+        }
     }
 
-    function searchSheet() {}
-    function searchHistory() {}
+    function render() {
+        const body = document.getElementById('billBody');
+        body.innerHTML = '';
+        let sub = 0;
+        items.forEach((it, i) => {
+            sub += it.price;
+            body.innerHTML += `<tr><td>${i+1}</td><td>${it.name}</td><td class="text-right">${it.price.toFixed(2)}</td><td class="no-print"><button onclick="items.splice(${i},1);render()">✖</button></td></tr>`;
+        });
+        document.getElementById('subTotal').innerText = sub.toFixed(2);
+        calculateTotal();
+    }
+
+    function calculateTotal() {
+        const sub = parseFloat(document.getElementById('subTotal').innerText);
+        const disc = parseFloat(document.getElementById('discInput').value) || 0;
+        document.getElementById('grandTotal').innerText = (sub - disc).toFixed(2);
+        document.getElementById('discDisplay').innerText = disc.toFixed(2);
+    }
+
+    function finalPrintCheck() {
+        const name = document.getElementById('pName').value.trim();
+        const age = document.getElementById('pAge').value.trim();
+        const sex = document.getElementById('pSex').value.trim();
+
+        // Reset Styles
+        document.getElementById('nameBox').classList.remove('required-field');
+        document.getElementById('ageBox').classList.remove('required-field');
+        document.getElementById('sexBox').classList.remove('required-field');
+
+        if (!name || !age || !sex) {
+            alert("Error: Name, Age, and Sex are compulsory fields!");
+            if (!name) document.getElementById('nameBox').classList.add('required-field');
+            if (!age) document.getElementById('ageBox').classList.add('required-field');
+            if (!sex) document.getElementById('sexBox').classList.add('required-field');
+            return;
+        }
+
+        if (items.length === 0) return alert("Please add a test.");
+
+        // Smart Hide Discount Row
+        if (parseFloat(document.getElementById('discInput').value) === 0) {
+            document.getElementById('discRow').classList.add('no-print');
+        } else {
+            document.getElementById('discRow').classList.remove('no-print');
+        }
+
+        window.print();
+        
+        // Auto-increment
+        let next = parseInt(document.getElementById('invNo').innerText) + 1;
+        localStorage.setItem('lastInvPatel', next);
+        setTimeout(() => { location.reload(); }, 1000);
+    }
 </script>
 
 </body>
