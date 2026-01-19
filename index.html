@@ -6,61 +6,39 @@
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
         
-        /* --- 1. INVOICE CSS --- */
-        .invoice-box { 
-            width: 195mm; 
-            height: auto; 
-            min-height: 140mm;
-            background: white; 
-            margin: 10px auto; 
-            padding: 5mm; 
-            box-sizing: border-box; 
-            border-bottom: 2px dashed #bbb; 
-        }
-
+        /* INVOICE STYLES */
+        .invoice-box { width: 195mm; min-height: 140mm; background: white; margin: 10px auto; padding: 5mm; box-sizing: border-box; border-bottom: 2px dashed #bbb; }
         .header { text-align: center; border-bottom: 3px solid #d35400; padding-bottom: 5px; margin-bottom: 12px; }
         .header h1 { margin: 0; color: #d35400; font-size: 24pt; text-transform: uppercase; }
         .header p { margin: 2px 0; font-size: 10pt; font-weight: bold; }
-        
         .info-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; font-size: 11pt; }
         .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
         .item { display: flex; align-items: center; }
         .item b { margin-right: 5px; color: #444; }
-        
         input { border: none; outline: none; font-size: 11pt; background: transparent; font-family: inherit; width: 100%; }
         .required-input { border-bottom: 2px solid #e74c3c !important; background: #fff5f5; }
-        
         .controls { background: #eef2f3; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 10px; border: 1px solid #ddd; }
         #testSearch { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
-        
         .btn { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .btn-add { background: #2980b9; color: white; }
         .btn-manual { background: #8e44ad; color: white; }
-        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 11pt; }
         th { background: #2c3e50; color: white; padding: 8px; text-align: left; }
         td { border: 1px solid #ccc; padding: 8px; }
-        
         .text-right { text-align: right; }
         .summary { float: right; width: 40%; margin-top: 10px; }
         .sum-row { display: flex; justify-content: space-between; padding: 3px 0; align-items: center; }
         .grand-total { font-weight: bold; font-size: 14pt; border-top: 2px solid #d35400; color: #d35400; padding-top: 5px; }
         .due-row { font-weight: bold; color: #c0392b; border-top: 1px solid #ddd; }
         
-        /* --- 2. STATUS TRACKER CSS --- */
+        /* TRACKER STYLES */
         .tracker-container { width: 195mm; margin: 20px auto; background: white; padding: 20px; box-sizing: border-box; }
         .tracker-header { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2c3e50; margin-top: 0; }
-        
-        /* Status Badges */
         .status { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
         .pending { background: #ffeaa7; color: #d35400; }
         .complete { background: #55efc4; color: #00b894; }
-        
-        /* Buttons */
         .btn-action { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
         .btn-success { background: #27ae60 !important; cursor: default; } 
-        
-        /* Loading Overlay */
         #loader { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); text-align: center; padding-top: 20%; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 9999; }
 
         @media print {
@@ -78,7 +56,7 @@
 </head>
 <body onload="initApp()">
 
-<div id="loader">Connecting to Database...<br><span style="font-size:14px; color: #777;">(If stuck, check Script Permissions)</span></div>
+<div id="loader">Syncing Database...</div>
 
 <div class="invoice-box" id="bill">
     <div class="header">
@@ -88,7 +66,7 @@
 
     <div class="info-grid">
         <div class="line">
-            <div class="item"><b>Invoice No:</b> <span id="invNo" onclick="manualInvoiceSet()" title="Click to change starting number">Loading...</span></div>
+            <div class="item"><b>Invoice No:</b> <span id="invNo" onclick="manualInvoiceSet()">Loading...</span></div>
             <div class="item"><b>Date/Time:</b> <span id="liveClock"></span></div>
         </div>
         <div class="line">
@@ -103,7 +81,7 @@
     </div>
 
     <div class="controls no-print">
-        <input type="text" id="testSearch" list="testList" placeholder="Search from 200+ tests...">
+        <input type="text" id="testSearch" list="testList" placeholder="Search tests...">
         <datalist id="testList"></datalist>
         <button type="button" class="btn btn-add" onclick="addTest()">Add</button>
         <button type="button" class="btn btn-manual" onclick="manualAdd()">+ Manual</button>
@@ -122,7 +100,6 @@
             <span class="print-only" id="discDisplay">0.00</span>
         </div>
         <div class="sum-row grand-total"><span>Total Payable:</span> <span id="grandTotal">0.00</span></div>
-        
         <div class="sum-row" style="margin-top: 5px;">
             <span>Paid Amount:</span>
             <input type="number" id="paidInput" value="0" oninput="calculateTotal()" class="no-print" style="width: 80px; text-align: right; border-bottom: 1px solid #ccc; font-weight: bold;">
@@ -138,10 +115,7 @@
 
 <div class="no-print" style="text-align: center; margin: 30px;">
     <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 60px;">PRINT BILL & SAVE</button>
-    
     <button onclick="location.reload()" class="btn" style="background:#2980b9; color:white; font-size:14px; margin-left: 10px;">Refresh Data</button>
-
-    <button onclick="testConnection()" class="btn" style="background:#e67e22; color:white; font-size:12px; margin-left: 10px;">Test Connection</button>
 </div>
 
 <div class="tracker-container">
@@ -151,235 +125,153 @@
             <tr>
                 <th>Lab ID</th>
                 <th>Patient Name</th>
-                <th>Test Details</th>
+                <th>Contact</th> <th>Test Details</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody id="statusTableBody">
-            </tbody>
+        <tbody id="statusTableBody"></tbody>
     </table>
 </div>
 
 <script>
-    // YOUR EXACT DEPLOYED URL
-    const API_URL = "https://script.google.com/macros/s/AKfycbyx-08xIF6Q-o_tPRk-RCY2N9jd1gmw3ASdVCLvG_hwe-1fYH_p6dXtzp_rtHMr0JyW/exec";
+    // YOUR LIVE CONNECTED URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyx-08xIF6Q-o_tPRk-RCY2N9jd1gmw3ASdVCLvG_hwe-1fYH_p6dXtzp_rtHMr0JyW/exec"; 
 
     const baseRates = {
         "Bharatfit Super Health Package": 1399, "One Plus One BharatFit Package-2": 2249, "One Plus One BharatFit Package-5": 3799, "Health Fit Package-4": 2200, "Semen Analysis": 400, "Dengue & Chikungunya RNA PCR": 1899, "Smears for Eosinophils": 200, "Fever Panel IV": 1499, "Fever Panel III": 1399, "Fever Panel I": 699, "Fatty Liver Screening Package": 1599, "Fever Plus Diagnostic Profile": 3999, "One Plus One Fever Panel Pro": 2899, "BharatFit Women-Comprehensive": 4499, "BharatFit Women Extended": 3999, "BharatFit Women-Advance": 3499, "BharatFit Women-Essential": 2499, "Haemogram (CBC + ESR + PS)": 499, "Sepsis Panel-Basic": 1599, "Amenorrhea Panel": 1599, "Fever Profile- Comprehensive": 3199, "Fever Insta Check (CBC + CRP)": 549, "Aayush Package-1": 499, "Aayush Package 2": 699, "Aayush Package 3": 849, "Aayush Package 4": 999, "Aayush Package-5": 1299, "BharatFit Super Advance": 3599, "BharatFit Advance": 3149, "Lipase, Fluid": 700, "BharatFit Winter Special-Comprehensive": 3599, "Amylase, Fluid": 400, "Protein Total, CSF": 180, "BRCA 1 & 2 Mutation Analysis NGS": 8000, "CBC+CA125": 900, "CBC + HPV": 1000, "TPHA With Titre": 900, "Dengue IgG & IgM, Rapid": 550, "Dengue NS1, Rapid": 450, "Urine Culture (Automated)": 800, "BharatFit Senior Citizen- Female": 3149, "BharatFit Senior Citizen- Male": 3149, "BharatFit Premium Health Check": 4199, "BharatFit Diabetes Check Package": 1649, "BharatFit Healthy Heart Package": 2599, "Urine Profile": 899, "Malaria Screening Panel": 799, "KOH Stain": 300, "Glucose Tolerance Test (GTT 2)": 160, "Bumper Pocket Saver Package": 199, "Dengue Panel by EIA": 1900, "Cholesterol Profile": 350, "Pancreas Profile": 799, "BharatFit Package 4": 1849, "BharatFit Package-3": 1649, "BharatFit Package-2": 1379, "BharatFit Package-1": 899, "BharatFit Pro": 599, "Fever Panel DPS": 949, "HDL Cholesterol Direct": 260, "Ante Natal Profile Basic": 800, "Protein Spot Urine": 150, "Creatinine Spot Urine": 130, "Fever Panel-Pro": 1399, "VDRL RPR Titre": 170, "KFT Urine Routine": 500, "Peripheral Blood Smear": 100, "Absolute Basophils Count": 160, "Sickling Test": 160, "Filaria Antigen Detection": 790, "Absolute Granulocyte Count": 160, "LDL Cholesterol Direct": 310, "Calcium lonised Serum": 600, "Microalbumin-Creatinine Ratio": 240, "Fever Panel-Comprehensive": 1799, "HIV Early Screen": 700, "Vitamin D Test (25 Hydroxy)": 649, "Urine Routine & Microscopic": 50, "Typhoid (Typhidot) IGG & IGM": 500, "TSH 3rd Generation": 380, "Troponin T, Rapid": 1000, "Triglycerides": 180, "Total Protein": 70, "TLC (Total Leucocyte Count)": 60, "Thyroid Profile Total": 450, "SGPT/ALT": 100, "SGOT/AST": 100, "Prolactin Test (PRL)": 400, "Liver Function Test (LFT)": 399, "Kidney Function Test (KFT)": 399, "HBA1C Test": 299, "Complete Hemogram (CBC & ESR)": 299, "Complete Blood Count (CBC)": 249, "Blood Group Test": 50, "Vitamin B12 Test": 549
     };
-
     let billItems = [];
-    
+
     function initApp() {
         setInterval(updateClock, 1000); updateClock();
-        
-        // Load Test List
         const dlist = document.getElementById('testList');
         Object.keys(baseRates).sort().forEach(t => { let opt = document.createElement('option'); opt.value = t; dlist.appendChild(opt); });
-
-        // FETCH DATA FROM GOOGLE SHEET
         fetchData();
     }
-
     function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); }
-    
-    function manualInvoiceSet() {
-        const newNo = prompt("Enter new starting Invoice Number:", document.getElementById('invNo').innerText);
-        if (newNo) document.getElementById('invNo').innerText = newNo;
-    }
+    function manualInvoiceSet() { const n = prompt("New Invoice No:"); if(n) document.getElementById('invNo').innerText = n; }
 
-    // --- GOOGLE SHEETS INTEGRATION (FIXED) ---
-
+    // --- CONNECTIVITY ---
     function fetchData() {
         document.getElementById('loader').style.display = 'block';
-        
-        // Use standard GET request
         fetch(API_URL)
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             document.getElementById('loader').style.display = 'none';
             renderTable(data);
-            
-            // Calculate Next Invoice Number based on Data
-            let maxID = 260045; // Default start
+            let maxID = 260045;
             if(data.length > 0) {
                 data.forEach(row => {
                     let rawID = String(row[0]).replace("#","").replace("'","");
-                    let id = parseInt(rawID); 
+                    let id = parseInt(rawID);
                     if(!isNaN(id) && id > maxID) maxID = id;
                 });
             }
             document.getElementById('invNo').innerText = maxID + 1;
         })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('loader').style.display = 'none';
-            // Alert user only if it really fails
-            // alert("Connection Failed. Make sure you set 'Who has access' to 'ANYONE' in Google Script.");
-        });
+        .catch(e => { console.error(e); document.getElementById('loader').style.display = 'none'; });
     }
 
     function renderTable(data) {
         let table = document.getElementById('statusTableBody');
-        table.innerHTML = ""; 
-        
+        table.innerHTML = "";
         for (let i = data.length - 1; i >= 0; i--) {
             let row = data[i];
+            // Columns: 0=ID, 1=Date, 2=Name, 3=Age, 4=Sex, 5=Contact, 6=Tests, 7=Amt, 8=Status
             let id = row[0];
             let name = row[2];
-            let tests = row[5];
-            
+            let contact = row[5]; // Contact column
+            let tests = row[6];
             let dateStr = row[1];
-            try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e) {}
-
-            let status = row[7]; 
-
-            let statusHtml = status === "Complete" 
-                ? `<span class="status complete">Complete</span>` 
-                : `<span class="status pending">Pending</span>`;
-                
-            let actionHtml = status === "Complete"
-                ? `<button class="btn-action btn-success">Completed</button>`
-                : `<button class="btn-action" onclick="markComplete(this, '${id}')">Enter Results</button>`;
+            try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e){}
+            let status = row[8];
+            
+            let statusHtml = status === "Complete" ? `<span class="status complete">Complete</span>` : `<span class="status pending">Pending</span>`;
+            let actionHtml = status === "Complete" ? `<button class="btn-action btn-success">Completed</button>` : `<button class="btn-action" onclick="markComplete(this, '${id}')">Enter Results</button>`;
 
             let newRow = table.insertRow(-1);
-            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${tests}</td><td>${dateStr}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
+            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${contact}</td><td>${tests}</td><td>${dateStr}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
         }
     }
 
-    // ⚠️ FIXED SAVE FUNCTION: USES URLSearchParams (Reliable)
     function saveDataToCloud(patientName, items, invID) {
+        let safeName = patientName || "";
+        if (safeName === "") return;
+
         let testSummary = items.map(i => i.name).join(", ");
         let totalAmt = document.getElementById('grandTotal').innerText;
         let pAge = document.getElementById('pAge').value;
         let pSex = document.getElementById('pSex').value;
+        let pContact = document.getElementById('pContact').value || ""; // Capture Contact
         let date = new Date().toLocaleDateString();
 
-        // Use URLSearchParams instead of FormData
         let params = new URLSearchParams();
         params.append("action", "add");
         params.append("id", "#" + invID);
         params.append("date", date);
-        params.append("name", patientName);
+        params.append("name", safeName);
         params.append("age", pAge);
         params.append("sex", pSex);
+        params.append("contact", pContact); // Send Contact
         params.append("tests", testSummary);
         params.append("amount", totalAmt);
 
-        fetch(API_URL, { 
-            method: 'POST', 
-            body: params
-        })
+        fetch(API_URL, { method: 'POST', body: params })
         .then(res => res.json())
-        .then(response => {
-            console.log("Saved:", response);
-            fetchData(); // Reload table
-        })
-        .catch(err => {
-            alert("Error saving: " + err);
-        });
+        .then(response => { if(response.result === "success") fetchData(); })
+        .catch(err => console.error(err));
     }
 
     function markComplete(btn, id) {
-        let pin = prompt("Enter PIN to complete result:");
+        let pin = prompt("Enter PIN:");
         if (pin === "8209") {
-            btn.innerText = "Syncing...";
-            
+            btn.innerText = "...";
             let params = new URLSearchParams();
             params.append("action", "update");
             params.append("id", id);
-
             fetch(API_URL, { method: 'POST', body: params })
             .then(res => res.json())
-            .then(response => {
-                if(response.result === "updated") {
-                    btn.innerText = "Completed";
-                    btn.classList.add('btn-success');
-                    btn.onclick = null; 
-                    let row = btn.parentElement.parentElement;
-                    row.querySelector('.status').innerHTML = "Complete";
-                    row.querySelector('.status').className = "status complete";
-                } else {
-                    alert("Error updating status. ID not found.");
+            .then(r => {
+                if(r.result === "updated") {
+                    btn.innerText = "Completed"; btn.className = "btn-action btn-success"; btn.onclick = null;
+                    btn.parentElement.parentElement.querySelector('.status').className = "status complete";
+                    btn.parentElement.parentElement.querySelector('.status').innerText = "Complete";
                 }
             });
-        } else if (pin !== null) {
-            alert("Incorrect PIN.");
-        }
+        } else if (pin !== null) alert("Wrong PIN");
     }
 
-    // DEBUG FUNCTION
-    function testConnection() {
-        alert("Testing connection to: " + API_URL);
-        fetch(API_URL)
-            .then(res => res.json())
-            .then(data => alert("Success! Found " + data.length + " rows in database."))
-            .catch(err => alert("FAILED: " + err));
+    // --- INVOICE FUNCTIONS ---
+    function addTest() { 
+        let v = document.getElementById('testSearch').value; 
+        if(baseRates[v]) { billItems.push({name:v, price:baseRates[v]}); render(); document.getElementById('testSearch').value=''; } 
     }
-
-    // --- STANDARD INVOICE FUNCTIONS ---
-
-    function addTest() {
-        const name = document.getElementById('testSearch').value;
-        if (baseRates[name]) { billItems.push({ name: name, price: baseRates[name] }); render(); document.getElementById('testSearch').value = ''; }
-        else if (name !== "") alert("Test not found.");
-    }
-    function manualAdd() { const n = prompt("Test Name:"), p = prompt("Price:"); if (n && p) { billItems.push({ name: n, price: parseFloat(p) }); render(); } }
-    
+    function manualAdd() { let n=prompt("Name"), p=prompt("Price"); if(n&&p) { billItems.push({name:n, price:parseFloat(p)}); render(); } }
     function render() {
-        const body = document.getElementById('billBody'); body.innerHTML = ''; let sub = 0;
-        billItems.forEach((it, i) => { sub += it.price; body.innerHTML += `<tr><td>${i+1}</td><td>${it.name}</td><td class="text-right">${it.price.toFixed(2)}</td><td class="no-print"><button onclick="billItems.splice(${i},1);render()">✖</button></td></tr>`; });
-        document.getElementById('subTotal').innerText = sub.toFixed(2); calculateTotal();
+        let b = document.getElementById('billBody'), s=0; b.innerHTML="";
+        billItems.forEach((x,i)=>{ s+=x.price; b.innerHTML+=`<tr><td>${i+1}</td><td>${x.name}</td><td class="text-right">${x.price.toFixed(2)}</td><td class="no-print"><button onclick="billItems.splice(${i},1);render()">x</button></td></tr>`; });
+        document.getElementById('subTotal').innerText=s.toFixed(2); calculateTotal();
     }
     function calculateTotal() {
-        const sub = parseFloat(document.getElementById('subTotal').innerText);
-        const disc = parseFloat(document.getElementById('discInput').value) || 0;
-        const paid = parseFloat(document.getElementById('paidInput').value) || 0;
-        const payable = sub - disc;
-        const due = payable - paid;
-        document.getElementById('grandTotal').innerText = payable.toFixed(2); 
-        document.getElementById('discDisplay').innerText = disc.toFixed(2);
-        document.getElementById('paidDisplay').innerText = paid.toFixed(2);
-        document.getElementById('dueTotal').innerText = due.toFixed(2);
-        if (due <= 0) { document.getElementById('dueRow').style.opacity = "0.3"; } 
-        else { document.getElementById('dueRow').style.opacity = "1"; }
+        let s = parseFloat(document.getElementById('subTotal').innerText), d = parseFloat(document.getElementById('discInput').value)||0, p = parseFloat(document.getElementById('paidInput').value)||0;
+        document.getElementById('grandTotal').innerText=(s-d).toFixed(2);
+        document.getElementById('dueTotal').innerText=(s-d-p).toFixed(2);
+        document.getElementById('dueRow').style.opacity = (s-d-p)<=0 ? "0.3" : "1";
     }
-
     function finalPrintCheck() {
-        const n = document.getElementById('pName'), a = document.getElementById('pAge'), s = document.getElementById('pSex');
-        [n, a, s].forEach(el => el.classList.remove('required-input'));
+        let n=document.getElementById('pName');
+        if(!n.value) return alert("Name required");
+        if(billItems.length===0) return alert("Add test");
         
-        if (!n.value || !a.value || !s.value) {
-            alert("Name, Age, Sex are compulsory!");
-            if(!n.value) n.classList.add('required-input'); if(!a.value) a.classList.add('required-input'); if(!s.value) s.classList.add('required-input');
-            return;
-        }
-        if (billItems.length === 0) return alert("Add a test.");
-
-        // SAVE TO GOOGLE SHEET
-        let currentInvID = document.getElementById('invNo').innerText;
-        saveDataToCloud(n.value, billItems, currentInvID);
-
-        if (parseFloat(document.getElementById('discInput').value) === 0) document.getElementById('discRow').classList.add('no-print');
+        saveDataToCloud(n.value, billItems, document.getElementById('invNo').innerText);
+        if(parseFloat(document.getElementById('discInput').value)===0) document.getElementById('discRow').className+=" no-print";
         window.print();
-        
-        // RESET FORM
-        setTimeout(resetForm, 1000);
-    }
-
-    function resetForm() {
-        document.getElementById('pName').value = "";
-        document.getElementById('pAge').value = "";
-        document.getElementById('pSex').value = "";
-        document.getElementById('pContact').value = "";
-        document.getElementById('pRefer').value = "";
-        document.getElementById('testSearch').value = "";
-        billItems = []; render();
-        document.getElementById('discInput').value = "0";
-        document.getElementById('paidInput').value = "0";
-        calculateTotal();
+        setTimeout(()=>{ 
+            document.getElementById('pName').value=""; document.getElementById('pAge').value=""; document.getElementById('pContact').value="";
+            billItems=[]; render(); document.getElementById('discInput').value="0"; calculateTotal();
+        }, 1000);
     }
 </script>
 </body>
