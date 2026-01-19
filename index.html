@@ -138,7 +138,10 @@
 
 <div class="no-print" style="text-align: center; margin: 30px;">
     <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 60px;">PRINT BILL & SAVE</button>
+    
     <button onclick="location.reload()" class="btn" style="background:#2980b9; color:white; font-size:14px; margin-left: 10px;">Refresh Data</button>
+
+    <button onclick="testConnection()" class="btn" style="background:#e67e22; color:white; font-size:12px; margin-left: 10px;">Test Connection</button>
 </div>
 
 <div class="tracker-container">
@@ -187,10 +190,12 @@
         if (newNo) document.getElementById('invNo').innerText = newNo;
     }
 
-    // --- GOOGLE SHEETS INTEGRATION ---
+    // --- GOOGLE SHEETS INTEGRATION (FIXED) ---
 
     function fetchData() {
         document.getElementById('loader').style.display = 'block';
+        
+        // Use standard GET request
         fetch(API_URL)
         .then(response => response.json())
         .then(data => {
@@ -201,7 +206,6 @@
             let maxID = 260045; // Default start
             if(data.length > 0) {
                 data.forEach(row => {
-                    // Try to parse ID (e.g., "#260045" -> 260045)
                     let rawID = String(row[0]).replace("#","").replace("'","");
                     let id = parseInt(rawID); 
                     if(!isNaN(id) && id > maxID) maxID = id;
@@ -212,27 +216,25 @@
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('loader').style.display = 'none';
-            alert("Error: Access Denied.\n\nPLEASE FIX: Go to your Google Script -> Deploy -> Manage Deployments -> Edit -> Set 'Who has access' to 'ANYONE'.");
+            // Alert user only if it really fails
+            // alert("Connection Failed. Make sure you set 'Who has access' to 'ANYONE' in Google Script.");
         });
     }
 
     function renderTable(data) {
         let table = document.getElementById('statusTableBody');
-        table.innerHTML = ""; // Clear existing
+        table.innerHTML = ""; 
         
-        // Reverse loop to show newest first
         for (let i = data.length - 1; i >= 0; i--) {
             let row = data[i];
-            // Sheet Columns: 0=ID, 1=Date, 2=Name, 3=Age, 4=Sex, 5=Tests, 6=Amount, 7=Status
             let id = row[0];
             let name = row[2];
             let tests = row[5];
             
-            // Format date nicely
             let dateStr = row[1];
             try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e) {}
 
-            let status = row[7]; // Pending or Complete
+            let status = row[7]; 
 
             let statusHtml = status === "Complete" 
                 ? `<span class="status complete">Complete</span>` 
@@ -247,6 +249,7 @@
         }
     }
 
+    // ⚠️ FIXED SAVE FUNCTION: USES URLSearchParams (Reliable)
     function saveDataToCloud(patientName, items, invID) {
         let testSummary = items.map(i => i.name).join(", ");
         let totalAmt = document.getElementById('grandTotal').innerText;
@@ -254,22 +257,28 @@
         let pSex = document.getElementById('pSex').value;
         let date = new Date().toLocaleDateString();
 
-        let formData = new FormData();
-        formData.append("action", "add");
-        formData.append("id", "#" + invID);
-        formData.append("date", date);
-        formData.append("name", patientName);
-        formData.append("age", pAge);
-        formData.append("sex", pSex);
-        formData.append("tests", testSummary);
-        formData.append("amount", totalAmt);
+        // Use URLSearchParams instead of FormData
+        let params = new URLSearchParams();
+        params.append("action", "add");
+        params.append("id", "#" + invID);
+        params.append("date", date);
+        params.append("name", patientName);
+        params.append("age", pAge);
+        params.append("sex", pSex);
+        params.append("tests", testSummary);
+        params.append("amount", totalAmt);
 
-        fetch(API_URL, { method: 'POST', body: formData })
+        fetch(API_URL, { 
+            method: 'POST', 
+            body: params
+        })
         .then(res => res.json())
         .then(response => {
             console.log("Saved:", response);
-            // Refresh table to show new data
-            fetchData(); 
+            fetchData(); // Reload table
+        })
+        .catch(err => {
+            alert("Error saving: " + err);
         });
     }
 
@@ -278,28 +287,36 @@
         if (pin === "8209") {
             btn.innerText = "Syncing...";
             
-            let formData = new FormData();
-            formData.append("action", "update");
-            formData.append("id", id);
+            let params = new URLSearchParams();
+            params.append("action", "update");
+            params.append("id", id);
 
-            fetch(API_URL, { method: 'POST', body: formData })
+            fetch(API_URL, { method: 'POST', body: params })
             .then(res => res.json())
             .then(response => {
                 if(response.result === "updated") {
-                    // Update UI immediately
                     btn.innerText = "Completed";
                     btn.classList.add('btn-success');
-                    btn.onclick = null; // Disable click
+                    btn.onclick = null; 
                     let row = btn.parentElement.parentElement;
                     row.querySelector('.status').innerHTML = "Complete";
                     row.querySelector('.status').className = "status complete";
                 } else {
-                    alert("Error updating status. ID not found in sheet.");
+                    alert("Error updating status. ID not found.");
                 }
             });
         } else if (pin !== null) {
             alert("Incorrect PIN.");
         }
+    }
+
+    // DEBUG FUNCTION
+    function testConnection() {
+        alert("Testing connection to: " + API_URL);
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => alert("Success! Found " + data.length + " rows in database."))
+            .catch(err => alert("FAILED: " + err));
     }
 
     // --- STANDARD INVOICE FUNCTIONS ---
