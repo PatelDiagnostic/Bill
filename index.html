@@ -2,13 +2,15 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Patel Diagnostic Udaipur - Complete</title>
+    <title>Patel Diagnostic - Online System</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
         
+        /* --- 1. INVOICE CSS --- */
         .invoice-box { 
             width: 195mm; 
-            height: 140mm; 
+            height: auto; 
+            min-height: 140mm;
             background: white; 
             margin: 10px auto; 
             padding: 5mm; 
@@ -45,19 +47,38 @@
         .grand-total { font-weight: bold; font-size: 14pt; border-top: 2px solid #d35400; color: #d35400; padding-top: 5px; }
         .due-row { font-weight: bold; color: #c0392b; border-top: 1px solid #ddd; }
         
+        /* --- 2. STATUS TRACKER CSS --- */
+        .tracker-container { width: 195mm; margin: 20px auto; background: white; padding: 20px; box-sizing: border-box; }
+        .tracker-header { border-bottom: 2px solid #3498db; padding-bottom: 10px; color: #2c3e50; margin-top: 0; }
+        
+        /* Status Badges */
+        .status { padding: 5px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
+        .pending { background: #ffeaa7; color: #d35400; }
+        .complete { background: #55efc4; color: #00b894; }
+        
+        /* Buttons */
+        .btn-action { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-success { background: #27ae60 !important; cursor: default; } 
+        
+        /* Loading Overlay */
+        #loader { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); text-align: center; padding-top: 20%; font-weight: bold; font-size: 20px; z-index: 9999; }
+
         @media print {
             @page { size: auto; margin: 5mm; }
             body { margin: 0; background: white; }
             .no-print { display: none !important; }
+            .tracker-container { display: none; } 
             .invoice-box { border: none; width: 100%; height: auto; padding: 0; margin: 0; }
             input { border: none; pointer-events: none; }
             .print-only { display: inline !important; }
         }
         .print-only { display: none; }
-        #invNo { cursor: pointer; color: #2980b9; } /* Visual hint that it's clickable */
+        #invNo { cursor: pointer; color: #2980b9; }
     </style>
 </head>
-<body onload="initInvoice()">
+<body onload="initApp()">
+
+<div id="loader">Syncing with Cloud... Please Wait...</div>
 
 <div class="invoice-box" id="bill">
     <div class="header">
@@ -67,7 +88,7 @@
 
     <div class="info-grid">
         <div class="line">
-            <div class="item"><b>Invoice No:</b> <span id="invNo" onclick="manualInvoiceSet()" title="Click to change starting number"></span></div>
+            <div class="item"><b>Invoice No:</b> <span id="invNo" onclick="manualInvoiceSet()" title="Click to change starting number">Loading...</span></div>
             <div class="item"><b>Date/Time:</b> <span id="liveClock"></span></div>
         </div>
         <div class="line">
@@ -76,8 +97,8 @@
             <div class="item" style="flex: 0.5;"><b>Sex:*</b> <input type="text" id="pSex" placeholder="M/F"></div>
         </div>
         <div class="line">
-            <div class="item" style="flex: 1;"><b>Contact:</b> <input type="text" placeholder="Mobile"></div>
-            <div class="item" style="flex: 1.5;"><b>Refer By:</b> <input type="text" placeholder="Doctor / Self"></div>
+            <div class="item" style="flex: 1;"><b>Contact:</b> <input type="text" id="pContact" placeholder="Mobile"></div>
+            <div class="item" style="flex: 1.5;"><b>Refer By:</b> <input type="text" id="pRefer" placeholder="Doctor / Self"></div>
         </div>
     </div>
 
@@ -112,33 +133,168 @@
             <span id="dueTotal">0.00</span>
         </div>
     </div>
+    <div style="clear:both"></div>
 </div>
 
-<div class="no-print" style="text-align: center; margin: 30px;"><button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 60px;">PRINT BILL</button></div>
+<div class="no-print" style="text-align: center; margin: 30px;">
+    <button onclick="finalPrintCheck()" class="btn" style="background:#27ae60; color:white; font-size:18px; padding:15px 60px;">PRINT BILL & SAVE</button>
+    <button onclick="location.reload()" class="btn" style="background:#2980b9; color:white; font-size:14px; margin-left: 10px;">Refresh Data</button>
+</div>
+
+<div class="tracker-container">
+    <h2 class="tracker-header">2. Report Status Tracker (Online)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Lab ID</th>
+                <th>Patient Name</th>
+                <th>Test Details</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="statusTableBody">
+            </tbody>
+    </table>
+</div>
 
 <script>
+    // YOUR GOOGLE SCRIPT URL
+    const API_URL = "https://script.google.com/macros/s/AKfycbyx-08xIF6Q-o_tPRk-RCY2N9jd1gmw3ASdVCLvG_hwe-1fYH_p6dXtzp_rtHMr0JyW/exec";
+
     const baseRates = {
         "Bharatfit Super Health Package": 1399, "One Plus One BharatFit Package-2": 2249, "One Plus One BharatFit Package-5": 3799, "Health Fit Package-4": 2200, "Semen Analysis": 400, "Dengue & Chikungunya RNA PCR": 1899, "Smears for Eosinophils": 200, "Fever Panel IV": 1499, "Fever Panel III": 1399, "Fever Panel I": 699, "Fatty Liver Screening Package": 1599, "Fever Plus Diagnostic Profile": 3999, "One Plus One Fever Panel Pro": 2899, "BharatFit Women-Comprehensive": 4499, "BharatFit Women Extended": 3999, "BharatFit Women-Advance": 3499, "BharatFit Women-Essential": 2499, "Haemogram (CBC + ESR + PS)": 499, "Sepsis Panel-Basic": 1599, "Amenorrhea Panel": 1599, "Fever Profile- Comprehensive": 3199, "Fever Insta Check (CBC + CRP)": 549, "Aayush Package-1": 499, "Aayush Package 2": 699, "Aayush Package 3": 849, "Aayush Package 4": 999, "Aayush Package-5": 1299, "BharatFit Super Advance": 3599, "BharatFit Advance": 3149, "Lipase, Fluid": 700, "BharatFit Winter Special-Comprehensive": 3599, "Amylase, Fluid": 400, "Protein Total, CSF": 180, "BRCA 1 & 2 Mutation Analysis NGS": 8000, "CBC+CA125": 900, "CBC + HPV": 1000, "TPHA With Titre": 900, "Dengue IgG & IgM, Rapid": 550, "Dengue NS1, Rapid": 450, "Urine Culture (Automated)": 800, "BharatFit Senior Citizen- Female": 3149, "BharatFit Senior Citizen- Male": 3149, "BharatFit Premium Health Check": 4199, "BharatFit Diabetes Check Package": 1649, "BharatFit Healthy Heart Package": 2599, "Urine Profile": 899, "Malaria Screening Panel": 799, "KOH Stain": 300, "Glucose Tolerance Test (GTT 2)": 160, "Bumper Pocket Saver Package": 199, "Dengue Panel by EIA": 1900, "Cholesterol Profile": 350, "Pancreas Profile": 799, "BharatFit Package 4": 1849, "BharatFit Package-3": 1649, "BharatFit Package-2": 1379, "BharatFit Package-1": 899, "BharatFit Pro": 599, "Fever Panel DPS": 949, "HDL Cholesterol Direct": 260, "Ante Natal Profile Basic": 800, "Protein Spot Urine": 150, "Creatinine Spot Urine": 130, "Fever Panel-Pro": 1399, "VDRL RPR Titre": 170, "KFT Urine Routine": 500, "Peripheral Blood Smear": 100, "Absolute Basophils Count": 160, "Sickling Test": 160, "Filaria Antigen Detection": 790, "Absolute Granulocyte Count": 160, "LDL Cholesterol Direct": 310, "Calcium lonised Serum": 600, "Microalbumin-Creatinine Ratio": 240, "Fever Panel-Comprehensive": 1799, "HIV Early Screen": 700, "Vitamin D Test (25 Hydroxy)": 649, "Urine Routine & Microscopic": 50, "Typhoid (Typhidot) IGG & IGM": 500, "TSH 3rd Generation": 380, "Troponin T, Rapid": 1000, "Triglycerides": 180, "Total Protein": 70, "TLC (Total Leucocyte Count)": 60, "Thyroid Profile Total": 450, "SGPT/ALT": 100, "SGOT/AST": 100, "Prolactin Test (PRL)": 400, "Liver Function Test (LFT)": 399, "Kidney Function Test (KFT)": 399, "HBA1C Test": 299, "Complete Hemogram (CBC & ESR)": 299, "Complete Blood Count (CBC)": 249, "Blood Group Test": 50, "Vitamin B12 Test": 549
     };
 
     let billItems = [];
-    function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); }
     
-    function initInvoice() {
+    function initApp() {
         setInterval(updateClock, 1000); updateClock();
-        // Updated starting number to 260045
-        document.getElementById('invNo').innerText = localStorage.getItem('lastInvPatel') || 260045;
+        
+        // Load Test List
         const dlist = document.getElementById('testList');
         Object.keys(baseRates).sort().forEach(t => { let opt = document.createElement('option'); opt.value = t; dlist.appendChild(opt); });
+
+        // FETCH DATA FROM GOOGLE SHEET
+        fetchData();
     }
 
+    function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); }
+    
     function manualInvoiceSet() {
         const newNo = prompt("Enter new starting Invoice Number:", document.getElementById('invNo').innerText);
-        if (newNo) {
-            document.getElementById('invNo').innerText = newNo;
-            localStorage.setItem('lastInvPatel', newNo);
+        if (newNo) document.getElementById('invNo').innerText = newNo;
+    }
+
+    // --- GOOGLE SHEETS INTEGRATION ---
+
+    function fetchData() {
+        document.getElementById('loader').style.display = 'block';
+        fetch(API_URL)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loader').style.display = 'none';
+            renderTable(data);
+            
+            // Calculate Next Invoice Number based on Data
+            let maxID = 260045; // Default start
+            data.forEach(row => {
+                let id = parseInt(row[0].replace("#","")); // Remove # and parse
+                if(id > maxID) maxID = id;
+            });
+            document.getElementById('invNo').innerText = maxID + 1;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('loader').style.display = 'none';
+            alert("Error loading data. Check internet.");
+        });
+    }
+
+    function renderTable(data) {
+        let table = document.getElementById('statusTableBody');
+        table.innerHTML = ""; // Clear existing
+        
+        // Reverse loop to show newest first
+        for (let i = data.length - 1; i >= 0; i--) {
+            let row = data[i];
+            // Sheet Columns: 0=ID, 1=Date, 2=Name, 3=Age, 4=Sex, 5=Tests, 6=Amount, 7=Status
+            let id = row[0];
+            let name = row[2];
+            let tests = row[5];
+            let date = new Date(row[1]).toISOString().slice(0, 10);
+            let status = row[7]; // Pending or Complete
+
+            let statusHtml = status === "Complete" 
+                ? `<span class="status complete">Complete</span>` 
+                : `<span class="status pending">Pending</span>`;
+                
+            let actionHtml = status === "Complete"
+                ? `<button class="btn-action btn-success">Completed</button>`
+                : `<button class="btn-action" onclick="markComplete(this, '${id}')">Enter Results</button>`;
+
+            let newRow = table.insertRow(-1);
+            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${tests}</td><td>${date}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
         }
     }
+
+    function saveDataToCloud(patientName, items, invID) {
+        let testSummary = items.map(i => i.name).join(", ");
+        let totalAmt = document.getElementById('grandTotal').innerText;
+        let pAge = document.getElementById('pAge').value;
+        let pSex = document.getElementById('pSex').value;
+        let date = new Date().toLocaleDateString();
+
+        let formData = new FormData();
+        formData.append("action", "add");
+        formData.append("id", "#" + invID);
+        formData.append("date", date);
+        formData.append("name", patientName);
+        formData.append("age", pAge);
+        formData.append("sex", pSex);
+        formData.append("tests", testSummary);
+        formData.append("amount", totalAmt);
+
+        fetch(API_URL, { method: 'POST', body: formData })
+        .then(res => res.json())
+        .then(response => {
+            console.log("Saved:", response);
+            // Refresh table to show new data
+            fetchData(); 
+        });
+    }
+
+    function markComplete(btn, id) {
+        let pin = prompt("Enter PIN to complete result:");
+        if (pin === "8209") {
+            btn.innerText = "Syncing...";
+            
+            let formData = new FormData();
+            formData.append("action", "update");
+            formData.append("id", id);
+
+            fetch(API_URL, { method: 'POST', body: formData })
+            .then(res => res.json())
+            .then(response => {
+                if(response.result === "updated") {
+                    // Update UI immediately
+                    btn.innerText = "Completed";
+                    btn.classList.add('btn-success');
+                    btn.onclick = null; // Disable click
+                    let row = btn.parentElement.parentElement;
+                    row.querySelector('.status').innerHTML = "Complete";
+                    row.querySelector('.status').className = "status complete";
+                } else {
+                    alert("Error updating status.");
+                }
+            });
+        } else if (pin !== null) {
+            alert("Incorrect PIN.");
+        }
+    }
+
+    // --- STANDARD INVOICE FUNCTIONS ---
 
     function addTest() {
         const name = document.getElementById('testSearch').value;
@@ -146,6 +302,7 @@
         else if (name !== "") alert("Test not found.");
     }
     function manualAdd() { const n = prompt("Test Name:"), p = prompt("Price:"); if (n && p) { billItems.push({ name: n, price: parseFloat(p) }); render(); } }
+    
     function render() {
         const body = document.getElementById('billBody'); body.innerHTML = ''; let sub = 0;
         billItems.forEach((it, i) => { sub += it.price; body.innerHTML += `<tr><td>${i+1}</td><td>${it.name}</td><td class="text-right">${it.price.toFixed(2)}</td><td class="no-print"><button onclick="billItems.splice(${i},1);render()">✖</button></td></tr>`; });
@@ -164,19 +321,40 @@
         if (due <= 0) { document.getElementById('dueRow').style.opacity = "0.3"; } 
         else { document.getElementById('dueRow').style.opacity = "1"; }
     }
+
     function finalPrintCheck() {
         const n = document.getElementById('pName'), a = document.getElementById('pAge'), s = document.getElementById('pSex');
         [n, a, s].forEach(el => el.classList.remove('required-input'));
+        
         if (!n.value || !a.value || !s.value) {
             alert("Name, Age, Sex are compulsory!");
             if(!n.value) n.classList.add('required-input'); if(!a.value) a.classList.add('required-input'); if(!s.value) s.classList.add('required-input');
             return;
         }
         if (billItems.length === 0) return alert("Add a test.");
+
+        // SAVE TO GOOGLE SHEET
+        let currentInvID = document.getElementById('invNo').innerText;
+        saveDataToCloud(n.value, billItems, currentInvID);
+
         if (parseFloat(document.getElementById('discInput').value) === 0) document.getElementById('discRow').classList.add('no-print');
         window.print();
-        localStorage.setItem('lastInvPatel', parseInt(document.getElementById('invNo').innerText) + 1);
-        setTimeout(() => location.reload(), 1000);
+        
+        // RESET FORM
+        setTimeout(resetForm, 1000);
+    }
+
+    function resetForm() {
+        document.getElementById('pName').value = "";
+        document.getElementById('pAge').value = "";
+        document.getElementById('pSex').value = "";
+        document.getElementById('pContact').value = "";
+        document.getElementById('pRefer').value = "";
+        document.getElementById('testSearch').value = "";
+        billItems = []; render();
+        document.getElementById('discInput').value = "0";
+        document.getElementById('paidInput').value = "0";
+        calculateTotal();
     }
 </script>
 </body>
