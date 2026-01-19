@@ -5,34 +5,56 @@
     <title>Patel Diagnostic Udaipur - Complete</title>
     <style>
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 0; background: #f4f4f4; }
-        .invoice-box { width: 210mm; height: 148.5mm; background: white; margin: auto; padding: 10mm; box-sizing: border-box; border-bottom: 2px dashed #bbb; }
+        
+        .invoice-box { 
+            width: 195mm; 
+            height: 140mm; 
+            background: white; 
+            margin: 10px auto; 
+            padding: 5mm; 
+            box-sizing: border-box; 
+            border-bottom: 2px dashed #bbb; 
+        }
+
         .header { text-align: center; border-bottom: 3px solid #d35400; padding-bottom: 5px; margin-bottom: 12px; }
         .header h1 { margin: 0; color: #d35400; font-size: 24pt; text-transform: uppercase; }
         .header p { margin: 2px 0; font-size: 10pt; font-weight: bold; }
+        
         .info-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; font-size: 11pt; }
         .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
         .item { display: flex; align-items: center; }
         .item b { margin-right: 5px; color: #444; }
+        
         input { border: none; outline: none; font-size: 11pt; background: transparent; font-family: inherit; width: 100%; }
         .required-input { border-bottom: 2px solid #e74c3c !important; background: #fff5f5; }
+        
         .controls { background: #eef2f3; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 10px; border: 1px solid #ddd; }
         #testSearch { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
         .btn { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .btn-add { background: #2980b9; color: white; }
         .btn-manual { background: #8e44ad; color: white; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 11pt; }
         th { background: #2c3e50; color: white; padding: 8px; text-align: left; }
         td { border: 1px solid #ccc; padding: 8px; }
+        
         .text-right { text-align: right; }
-        .summary { float: right; width: 35%; margin-top: 10px; }
-        .sum-row { display: flex; justify-content: space-between; padding: 3px 0; }
+        .summary { float: right; width: 40%; margin-top: 10px; }
+        .sum-row { display: flex; justify-content: space-between; padding: 3px 0; align-items: center; }
         .grand-total { font-weight: bold; font-size: 14pt; border-top: 2px solid #d35400; color: #d35400; padding-top: 5px; }
+        .due-row { font-weight: bold; color: #c0392b; border-top: 1px solid #ddd; }
+        
         @media print {
-            @page { margin: 0; }
-            body { margin: 1cm; background: white; }
+            @page { size: auto; margin: 5mm; }
+            body { margin: 0; background: white; }
             .no-print { display: none !important; }
-            .invoice-box { border: none; height: auto; }
+            .invoice-box { border: none; width: 100%; height: auto; padding: 0; margin: 0; }
+            input { border: none; pointer-events: none; }
+            .print-only { display: inline !important; }
         }
+        .print-only { display: none; }
+        #invNo { cursor: pointer; color: #2980b9; } /* Visual hint that it's clickable */
     </style>
 </head>
 <body onload="initInvoice()">
@@ -45,7 +67,7 @@
 
     <div class="info-grid">
         <div class="line">
-            <div class="item"><b>Invoice No:</b> <span id="invNo" style="font-weight:bold;"></span></div>
+            <div class="item"><b>Invoice No:</b> <span id="invNo" onclick="manualInvoiceSet()" title="Click to change starting number"></span></div>
             <div class="item"><b>Date/Time:</b> <span id="liveClock"></span></div>
         </div>
         <div class="line">
@@ -75,10 +97,20 @@
         <div class="sum-row"><span>Sub Total:</span> <span id="subTotal">0.00</span></div>
         <div id="discRow" class="sum-row" style="color:#c0392b;">
             <span>Discount:</span> 
-            <input type="number" id="discInput" value="0" oninput="calculateTotal()" class="no-print" style="width: 60px; text-align: right;">
+            <input type="number" id="discInput" value="0" oninput="calculateTotal()" class="no-print" style="width: 80px; text-align: right; border-bottom: 1px solid #ccc;">
             <span class="print-only" id="discDisplay">0.00</span>
         </div>
         <div class="sum-row grand-total"><span>Total Payable:</span> <span id="grandTotal">0.00</span></div>
+        
+        <div class="sum-row" style="margin-top: 5px;">
+            <span>Paid Amount:</span>
+            <input type="number" id="paidInput" value="0" oninput="calculateTotal()" class="no-print" style="width: 80px; text-align: right; border-bottom: 1px solid #ccc; font-weight: bold;">
+            <span class="print-only" id="paidDisplay" style="font-weight: bold;">0.00</span>
+        </div>
+        <div class="sum-row due-row" id="dueRow">
+            <span>Due Balance:</span>
+            <span id="dueTotal">0.00</span>
+        </div>
     </div>
 </div>
 
@@ -91,12 +123,23 @@
 
     let billItems = [];
     function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); }
+    
     function initInvoice() {
         setInterval(updateClock, 1000); updateClock();
-        document.getElementById('invNo').innerText = localStorage.getItem('lastInvPatel') || 20260001;
+        // Updated starting number to 260045
+        document.getElementById('invNo').innerText = localStorage.getItem('lastInvPatel') || 260045;
         const dlist = document.getElementById('testList');
         Object.keys(baseRates).sort().forEach(t => { let opt = document.createElement('option'); opt.value = t; dlist.appendChild(opt); });
     }
+
+    function manualInvoiceSet() {
+        const newNo = prompt("Enter new starting Invoice Number:", document.getElementById('invNo').innerText);
+        if (newNo) {
+            document.getElementById('invNo').innerText = newNo;
+            localStorage.setItem('lastInvPatel', newNo);
+        }
+    }
+
     function addTest() {
         const name = document.getElementById('testSearch').value;
         if (baseRates[name]) { billItems.push({ name: name, price: baseRates[name] }); render(); document.getElementById('testSearch').value = ''; }
@@ -109,8 +152,17 @@
         document.getElementById('subTotal').innerText = sub.toFixed(2); calculateTotal();
     }
     function calculateTotal() {
-        const sub = parseFloat(document.getElementById('subTotal').innerText), disc = parseFloat(document.getElementById('discInput').value) || 0;
-        document.getElementById('grandTotal').innerText = (sub - disc).toFixed(2); document.getElementById('discDisplay').innerText = disc.toFixed(2);
+        const sub = parseFloat(document.getElementById('subTotal').innerText);
+        const disc = parseFloat(document.getElementById('discInput').value) || 0;
+        const paid = parseFloat(document.getElementById('paidInput').value) || 0;
+        const payable = sub - disc;
+        const due = payable - paid;
+        document.getElementById('grandTotal').innerText = payable.toFixed(2); 
+        document.getElementById('discDisplay').innerText = disc.toFixed(2);
+        document.getElementById('paidDisplay').innerText = paid.toFixed(2);
+        document.getElementById('dueTotal').innerText = due.toFixed(2);
+        if (due <= 0) { document.getElementById('dueRow').style.opacity = "0.3"; } 
+        else { document.getElementById('dueRow').style.opacity = "1"; }
     }
     function finalPrintCheck() {
         const n = document.getElementById('pName'), a = document.getElementById('pAge'), s = document.getElementById('pSex');
