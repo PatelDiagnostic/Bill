@@ -61,7 +61,7 @@
         .btn-success { background: #27ae60 !important; cursor: default; } 
         
         /* Loading Overlay */
-        #loader { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); text-align: center; padding-top: 20%; font-weight: bold; font-size: 20px; z-index: 9999; }
+        #loader { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); text-align: center; padding-top: 20%; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 9999; }
 
         @media print {
             @page { size: auto; margin: 5mm; }
@@ -78,7 +78,7 @@
 </head>
 <body onload="initApp()">
 
-<div id="loader">Syncing with Cloud... Please Wait...</div>
+<div id="loader">Connecting to Database...<br><span style="font-size:14px; color: #777;">(If stuck, check Script Permissions)</span></div>
 
 <div class="invoice-box" id="bill">
     <div class="header">
@@ -160,7 +160,7 @@
 </div>
 
 <script>
-    // YOUR GOOGLE SCRIPT URL
+    // YOUR EXACT DEPLOYED URL
     const API_URL = "https://script.google.com/macros/s/AKfycbyx-08xIF6Q-o_tPRk-RCY2N9jd1gmw3ASdVCLvG_hwe-1fYH_p6dXtzp_rtHMr0JyW/exec";
 
     const baseRates = {
@@ -199,16 +199,20 @@
             
             // Calculate Next Invoice Number based on Data
             let maxID = 260045; // Default start
-            data.forEach(row => {
-                let id = parseInt(row[0].replace("#","")); // Remove # and parse
-                if(id > maxID) maxID = id;
-            });
+            if(data.length > 0) {
+                data.forEach(row => {
+                    // Try to parse ID (e.g., "#260045" -> 260045)
+                    let rawID = String(row[0]).replace("#","").replace("'","");
+                    let id = parseInt(rawID); 
+                    if(!isNaN(id) && id > maxID) maxID = id;
+                });
+            }
             document.getElementById('invNo').innerText = maxID + 1;
         })
         .catch(error => {
             console.error('Error:', error);
             document.getElementById('loader').style.display = 'none';
-            alert("Error loading data. Check internet.");
+            alert("Error: Access Denied.\n\nPLEASE FIX: Go to your Google Script -> Deploy -> Manage Deployments -> Edit -> Set 'Who has access' to 'ANYONE'.");
         });
     }
 
@@ -223,7 +227,11 @@
             let id = row[0];
             let name = row[2];
             let tests = row[5];
-            let date = new Date(row[1]).toISOString().slice(0, 10);
+            
+            // Format date nicely
+            let dateStr = row[1];
+            try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e) {}
+
             let status = row[7]; // Pending or Complete
 
             let statusHtml = status === "Complete" 
@@ -235,7 +243,7 @@
                 : `<button class="btn-action" onclick="markComplete(this, '${id}')">Enter Results</button>`;
 
             let newRow = table.insertRow(-1);
-            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${tests}</td><td>${date}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
+            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${tests}</td><td>${dateStr}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
         }
     }
 
@@ -286,7 +294,7 @@
                     row.querySelector('.status').innerHTML = "Complete";
                     row.querySelector('.status').className = "status complete";
                 } else {
-                    alert("Error updating status.");
+                    alert("Error updating status. ID not found in sheet.");
                 }
             });
         } else if (pin !== null) {
