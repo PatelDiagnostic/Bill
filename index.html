@@ -11,20 +11,26 @@
         .header { text-align: center; border-bottom: 3px solid #d35400; padding-bottom: 5px; margin-bottom: 12px; }
         .header h1 { margin: 0; color: #d35400; font-size: 24pt; text-transform: uppercase; }
         .header p { margin: 2px 0; font-size: 10pt; font-weight: bold; }
+        
         .info-grid { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; font-size: 11pt; }
         .line { display: flex; justify-content: space-between; border-bottom: 1px solid #eee; padding: 4px 0; }
         .item { display: flex; align-items: center; }
         .item b { margin-right: 5px; color: #444; }
+        
         input { border: none; outline: none; font-size: 11pt; background: transparent; font-family: inherit; width: 100%; }
         .required-input { border-bottom: 2px solid #e74c3c !important; background: #fff5f5; }
+        
         .controls { background: #eef2f3; padding: 12px; margin-bottom: 10px; border-radius: 8px; display: flex; gap: 10px; border: 1px solid #ddd; }
         #testSearch { flex-grow: 1; padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        
         .btn { padding: 10px 20px; border: none; cursor: pointer; border-radius: 4px; font-weight: bold; }
         .btn-add { background: #2980b9; color: white; }
         .btn-manual { background: #8e44ad; color: white; }
+        
         table { width: 100%; border-collapse: collapse; margin-top: 5px; font-size: 11pt; }
         th { background: #2c3e50; color: white; padding: 8px; text-align: left; }
         td { border: 1px solid #ccc; padding: 8px; }
+        
         .text-right { text-align: right; }
         .summary { float: right; width: 40%; margin-top: 10px; }
         .sum-row { display: flex; justify-content: space-between; padding: 3px 0; align-items: center; }
@@ -39,6 +45,12 @@
         .complete { background: #55efc4; color: #00b894; }
         .btn-action { background: #3498db; color: white; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
         .btn-success { background: #27ae60 !important; cursor: default; } 
+        
+        /* New Link Style */
+        .reprint-link { color: blue; text-decoration: underline; cursor: pointer; font-weight: bold; }
+        .reprint-link:hover { color: darkblue; }
+
+        /* Loader */
         #loader { display:none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.9); text-align: center; padding-top: 20%; font-weight: bold; font-size: 20px; color: #2c3e50; z-index: 9999; }
 
         @media print {
@@ -56,7 +68,7 @@
 </head>
 <body onload="initApp()">
 
-<div id="loader">Syncing Database...</div>
+<div id="loader">Syncing Database...<br><span style="font-size:12px; color:gray;">Please wait...</span></div>
 
 <div class="invoice-box" id="bill">
     <div class="header">
@@ -120,12 +132,14 @@
 
 <div class="tracker-container">
     <h2 class="tracker-header">2. Report Status Tracker (Online)</h2>
+    <p style="font-size: 14px; color: #666;">Tip: Click on the <b>Blue Lab ID</b> to Reprint the Invoice.</p>
     <table>
         <thead>
             <tr>
                 <th>Lab ID</th>
                 <th>Patient Name</th>
-                <th>Contact</th> <th>Test Details</th>
+                <th>Contact</th>
+                <th>Test Details</th>
                 <th>Date</th>
                 <th>Status</th>
                 <th>Action</th>
@@ -136,13 +150,14 @@
 </div>
 
 <script>
-    // YOUR LIVE CONNECTED URL
+    // ✅ YOUR URL IS HERE:
     const API_URL = "https://script.google.com/macros/s/AKfycbyx-08xIF6Q-o_tPRk-RCY2N9jd1gmw3ASdVCLvG_hwe-1fYH_p6dXtzp_rtHMr0JyW/exec"; 
 
     const baseRates = {
         "Bharatfit Super Health Package": 1399, "One Plus One BharatFit Package-2": 2249, "One Plus One BharatFit Package-5": 3799, "Health Fit Package-4": 2200, "Semen Analysis": 400, "Dengue & Chikungunya RNA PCR": 1899, "Smears for Eosinophils": 200, "Fever Panel IV": 1499, "Fever Panel III": 1399, "Fever Panel I": 699, "Fatty Liver Screening Package": 1599, "Fever Plus Diagnostic Profile": 3999, "One Plus One Fever Panel Pro": 2899, "BharatFit Women-Comprehensive": 4499, "BharatFit Women Extended": 3999, "BharatFit Women-Advance": 3499, "BharatFit Women-Essential": 2499, "Haemogram (CBC + ESR + PS)": 499, "Sepsis Panel-Basic": 1599, "Amenorrhea Panel": 1599, "Fever Profile- Comprehensive": 3199, "Fever Insta Check (CBC + CRP)": 549, "Aayush Package-1": 499, "Aayush Package 2": 699, "Aayush Package 3": 849, "Aayush Package 4": 999, "Aayush Package-5": 1299, "BharatFit Super Advance": 3599, "BharatFit Advance": 3149, "Lipase, Fluid": 700, "BharatFit Winter Special-Comprehensive": 3599, "Amylase, Fluid": 400, "Protein Total, CSF": 180, "BRCA 1 & 2 Mutation Analysis NGS": 8000, "CBC+CA125": 900, "CBC + HPV": 1000, "TPHA With Titre": 900, "Dengue IgG & IgM, Rapid": 550, "Dengue NS1, Rapid": 450, "Urine Culture (Automated)": 800, "BharatFit Senior Citizen- Female": 3149, "BharatFit Senior Citizen- Male": 3149, "BharatFit Premium Health Check": 4199, "BharatFit Diabetes Check Package": 1649, "BharatFit Healthy Heart Package": 2599, "Urine Profile": 899, "Malaria Screening Panel": 799, "KOH Stain": 300, "Glucose Tolerance Test (GTT 2)": 160, "Bumper Pocket Saver Package": 199, "Dengue Panel by EIA": 1900, "Cholesterol Profile": 350, "Pancreas Profile": 799, "BharatFit Package 4": 1849, "BharatFit Package-3": 1649, "BharatFit Package-2": 1379, "BharatFit Package-1": 899, "BharatFit Pro": 599, "Fever Panel DPS": 949, "HDL Cholesterol Direct": 260, "Ante Natal Profile Basic": 800, "Protein Spot Urine": 150, "Creatinine Spot Urine": 130, "Fever Panel-Pro": 1399, "VDRL RPR Titre": 170, "KFT Urine Routine": 500, "Peripheral Blood Smear": 100, "Absolute Basophils Count": 160, "Sickling Test": 160, "Filaria Antigen Detection": 790, "Absolute Granulocyte Count": 160, "LDL Cholesterol Direct": 310, "Calcium lonised Serum": 600, "Microalbumin-Creatinine Ratio": 240, "Fever Panel-Comprehensive": 1799, "HIV Early Screen": 700, "Vitamin D Test (25 Hydroxy)": 649, "Urine Routine & Microscopic": 50, "Typhoid (Typhidot) IGG & IGM": 500, "TSH 3rd Generation": 380, "Troponin T, Rapid": 1000, "Triglycerides": 180, "Total Protein": 70, "TLC (Total Leucocyte Count)": 60, "Thyroid Profile Total": 450, "SGPT/ALT": 100, "SGOT/AST": 100, "Prolactin Test (PRL)": 400, "Liver Function Test (LFT)": 399, "Kidney Function Test (KFT)": 399, "HBA1C Test": 299, "Complete Hemogram (CBC & ESR)": 299, "Complete Blood Count (CBC)": 249, "Blood Group Test": 50, "Vitamin B12 Test": 549
     };
     let billItems = [];
+    let globalData = [];
 
     function initApp() {
         setInterval(updateClock, 1000); updateClock();
@@ -153,17 +168,25 @@
     function updateClock() { document.getElementById('liveClock').innerText = new Date().toLocaleString('en-IN', { hour12: true }); }
     function manualInvoiceSet() { const n = prompt("New Invoice No:"); if(n) document.getElementById('invNo').innerText = n; }
 
-    // --- CONNECTIVITY ---
     function fetchData() {
         document.getElementById('loader').style.display = 'block';
         fetch(API_URL)
         .then(res => res.json())
         .then(data => {
             document.getElementById('loader').style.display = 'none';
+            // ✅ SAFETY CHECK: If response is not a list, ignore it
+            if (!Array.isArray(data)) {
+                console.error("Data is not an array:", data);
+                return;
+            }
+            globalData = data; 
             renderTable(data);
+            
+            // Auto-calculate next Invoice ID
             let maxID = 260045;
             if(data.length > 0) {
                 data.forEach(row => {
+                    if(!row || !row[0]) return; // Skip bad rows
                     let rawID = String(row[0]).replace("#","").replace("'","");
                     let id = parseInt(rawID);
                     if(!isNaN(id) && id > maxID) maxID = id;
@@ -171,7 +194,10 @@
             }
             document.getElementById('invNo').innerText = maxID + 1;
         })
-        .catch(e => { console.error(e); document.getElementById('loader').style.display = 'none'; });
+        .catch(e => { 
+            console.error(e); 
+            document.getElementById('loader').style.display = 'none';
+        });
     }
 
     function renderTable(data) {
@@ -179,32 +205,55 @@
         table.innerHTML = "";
         for (let i = data.length - 1; i >= 0; i--) {
             let row = data[i];
-            // Columns: 0=ID, 1=Date, 2=Name, 3=Age, 4=Sex, 5=Contact, 6=Tests, 7=Amt, 8=Status
-            let id = row[0];
-            let name = row[2];
-            let contact = row[5]; // Contact column
-            let tests = row[6];
-            let dateStr = row[1];
-            try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e){}
-            let status = row[8];
+            
+            // ✅ CRITICAL FIX: SKIP UNDEFINED ROWS
+            if (!row || !row[0] || row[0] === "undefined" || row[0] === "") continue; 
+
+            // Extract Data safely
+            let id = row[0]; 
+            let name = row[2] || "-"; 
+            let contact = row[5] || ""; 
+            let tests = row[6] || ""; 
+            let amount = row[7] || "0";
+            let dateStr = row[1]; try { dateStr = new Date(row[1]).toISOString().slice(0, 10); } catch(e){ dateStr="-"; }
+            let status = row[8] || "Pending";
             
             let statusHtml = status === "Complete" ? `<span class="status complete">Complete</span>` : `<span class="status pending">Pending</span>`;
             let actionHtml = status === "Complete" ? `<button class="btn-action btn-success">Completed</button>` : `<button class="btn-action" onclick="markComplete(this, '${id}')">Enter Results</button>`;
 
             let newRow = table.insertRow(-1);
-            newRow.innerHTML = `<td>${id}</td><td>${name}</td><td>${contact}</td><td>${tests}</td><td>${dateStr}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
+            newRow.innerHTML = `<td><span class="reprint-link" onclick="reprintInvoice('${id}', '${name}', '${row[3]}', '${row[4]}', '${contact}', '${tests}', '${amount}')" title="Click to Reprint">${id}</span></td><td>${name}</td><td>${contact}</td><td>${tests}</td><td>${dateStr}</td><td>${statusHtml}</td><td>${actionHtml}</td>`;
         }
+    }
+
+    function reprintInvoice(id, name, age, sex, contact, testsStr, savedAmount) {
+        if(!confirm("Reprint Invoice " + id + "?")) return;
+        document.getElementById('pName').value = name;
+        document.getElementById('pAge').value = age;
+        document.getElementById('pSex').value = sex;
+        document.getElementById('pContact').value = contact;
+        document.getElementById('invNo').innerText = id.replace("#","").replace("'","");
+        billItems = [];
+        if(testsStr) {
+            let testsArr = testsStr.split(", ");
+            testsArr.forEach(tName => { let price = baseRates[tName] || 0; billItems.push({name: tName, price: price}); });
+        }
+        render();
+        let currentSubTotal = parseFloat(document.getElementById('subTotal').innerText);
+        let neededDiscount = currentSubTotal - parseFloat(savedAmount);
+        document.getElementById('discInput').value = neededDiscount > 0 ? neededDiscount : 0;
+        calculateTotal();
+        window.scrollTo(0, 0);
     }
 
     function saveDataToCloud(patientName, items, invID) {
         let safeName = patientName || "";
         if (safeName === "") return;
-
         let testSummary = items.map(i => i.name).join(", ");
         let totalAmt = document.getElementById('grandTotal').innerText;
         let pAge = document.getElementById('pAge').value;
         let pSex = document.getElementById('pSex').value;
-        let pContact = document.getElementById('pContact').value || ""; // Capture Contact
+        let pContact = document.getElementById('pContact').value || ""; 
         let date = new Date().toLocaleDateString();
 
         let params = new URLSearchParams();
@@ -214,14 +263,14 @@
         params.append("name", safeName);
         params.append("age", pAge);
         params.append("sex", pSex);
-        params.append("contact", pContact); // Send Contact
+        params.append("contact", pContact); 
         params.append("tests", testSummary);
         params.append("amount", totalAmt);
 
         fetch(API_URL, { method: 'POST', body: params })
         .then(res => res.json())
         .then(response => { if(response.result === "success") fetchData(); })
-        .catch(err => console.error(err));
+        .catch(err => { alert("Save Error: " + err); });
     }
 
     function markComplete(btn, id) {
@@ -243,7 +292,16 @@
         } else if (pin !== null) alert("Wrong PIN");
     }
 
-    // --- INVOICE FUNCTIONS ---
+    function testConnection() {
+        alert("Testing connection to database...");
+        fetch(API_URL).then(r=>r.json())
+        .then(d=> {
+            if(Array.isArray(d)) alert("Success! Found " + d.length + " rows.");
+            else alert("Connected, but data is empty or invalid format.");
+        })
+        .catch(e=>alert("Connection Failed: " + e));
+    }
+
     function addTest() { 
         let v = document.getElementById('testSearch').value; 
         if(baseRates[v]) { billItems.push({name:v, price:baseRates[v]}); render(); document.getElementById('testSearch').value=''; } 
@@ -264,7 +322,6 @@
         let n=document.getElementById('pName');
         if(!n.value) return alert("Name required");
         if(billItems.length===0) return alert("Add test");
-        
         saveDataToCloud(n.value, billItems, document.getElementById('invNo').innerText);
         if(parseFloat(document.getElementById('discInput').value)===0) document.getElementById('discRow').className+=" no-print";
         window.print();
