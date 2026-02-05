@@ -9,7 +9,6 @@
         :root { --primary-color: #2c3e50; --accent-color: #e67e22; }
         body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; padding: 20px; background-color: #f0f2f5; color: #333; }
         
-        /* Invoice Box */
         .invoice-container { 
             width: 210mm; height: 148.5mm; background: #fff; margin: 0 auto; 
             padding: 30px; box-sizing: border-box; position: relative;
@@ -20,33 +19,28 @@
         .lab-brand h1 { margin: 0; font-size: 26px; color: var(--primary-color); font-weight: 800; }
         .lab-brand p { margin: 2px 0; font-size: 12px; line-height: 1.4; }
         
-        /* Barcode & ID */
         .barcode-box { text-align: right; }
         #barcode { width: 140px; height: 45px; margin-top: 5px; }
         .inv-text { font-size: 15px; font-weight: bold; color: var(--accent-color); }
 
-        /* Patient Section */
         .patient-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
         .field { display: flex; border-bottom: 1px solid #eee; padding: 5px 0; }
         .field label { font-weight: 600; width: 110px; font-size: 13px; color: #555; }
         .field input, .field select { border: none; outline: none; font-size: 13px; flex: 1; background: transparent; color: #000; }
 
-        /* Table */
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th { text-align: left; padding: 10px; background: #f8f9fa; font-size: 12px; border-bottom: 2px solid #333; text-transform: uppercase; letter-spacing: 0.5px; }
+        th { text-align: left; padding: 10px; background: #f8f9fa; font-size: 12px; border-bottom: 2px solid #333; text-transform: uppercase; }
         td { padding: 8px 10px; border-bottom: 1px solid #f1f1f1; position: relative; }
-        .test-select { width: 100%; border: 1px solid #eee; padding: 5px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+        .test-select { width: 100%; border: 1px solid #eee; padding: 5px; border-radius: 4px; font-size: 13px; }
         .price-display { border: none; background: transparent; width: 100%; font-weight: bold; font-size: 14px; text-align: right; }
 
-        /* Summary */
         .summary-wrapper { display: flex; justify-content: flex-end; margin-top: 15px; }
         .summary-table { width: 250px; }
         .sum-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
         .grand-total { border-top: 2px solid var(--primary-color); margin-top: 5px; padding-top: 8px; font-weight: bold; font-size: 18px; color: #000; }
 
-        /* Interface Buttons */
         .no-print-zone { width: 210mm; margin: 0 auto 15px; display: flex; gap: 10px; justify-content: center; }
-        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; color: white; }
         .btn-main { background: #2c3e50; }
         .btn-wa { background: #25d366; }
         .btn-search { background: #f39c12; }
@@ -54,12 +48,11 @@
         
         .search-panel { width: 210mm; margin: 0 auto 15px; background: white; padding: 20px; border-radius: 8px; display: none; border: 1px solid #ddd; }
         
-        /* Print Rules */
         @media print {
             .no-print-zone, .btn-remove, .search-panel, .row-empty, button { display: none !important; }
             body { background: white; padding: 0; }
-            .invoice-container { border: none; box-shadow: none; margin: 0; width: 100%; height: auto; padding: 10mm; }
-            .field input, .field select, .test-select { border: none !important; appearance: none; pointer-events: none; -webkit-appearance: none; color: #000 !important; }
+            .invoice-container { border: none; box-shadow: none; margin: 0; width: 100%; height: auto; }
+            .field input, .field select, .test-select { border: none !important; appearance: none; pointer-events: none; color: #000 !important; }
             .field { border-bottom: 1px dashed #ccc; }
         }
     </style>
@@ -68,13 +61,13 @@
 
 <div class="no-print-zone">
     <button class="btn btn-search" onclick="toggleSearch()">🔍 Search History</button>
-    <button class="btn btn-main" onclick="processInvoice()">💾 Save & Cloud Sync</button>
+    <button class="btn btn-main" onclick="processInvoice()">💾 Save & Sync Cloud</button>
     <button class="btn btn-wa" onclick="shareWhatsApp()">📱 WhatsApp</button>
     <button class="btn" style="background:#95a5a6" onclick="location.reload()">🔄 New Bill</button>
 </div>
 
 <div id="searchPanel" class="search-panel">
-    <input type="text" id="searchQuery" placeholder="Search Patient Name, Mobile or ID..." style="padding:10px; width:350px; border:1px solid #ccc; border-radius:5px;">
+    <input type="text" id="searchQuery" placeholder="Find Name, Mobile or ID..." style="padding:10px; width:350px;">
     <button class="btn btn-search" onclick="runSearch()" style="padding:10px;">Search</button>
     <div id="searchRes" style="margin-top:20px; max-height: 300px; overflow-y: auto;"></div>
 </div>
@@ -83,7 +76,7 @@
     <div class="header">
         <div class="lab-brand">
             <h1>DIAGNOSTIC CARE LAB</h1>
-            <p>ISO 9001:2015 Certified Lab<br>Clinical Pathology | Biochemistry | Hematology<br>Health Plaza, Gate No. 2 | Ph: 9876543210</p>
+            <p>ISO Certified Laboratory<br>Clinical Pathology | Biochemistry<br>Main Road Plaza | Ph: 9876543210</p>
         </div>
         <div class="barcode-box">
             <div class="inv-text">ID: <span id="inv-id"></span></div>
@@ -98,26 +91,23 @@
             <div class="field">
                 <label>Age/Sex*:</label>
                 <input type="text" id="age" style="width: 45px;" placeholder="Age" required>
-                <select id="sex" style="width: 55px;"><option>M</option><option>F</option><option>O</option></select>
+                <select id="sex" style="width: 55px;"><option>M</option><option>F</option></select>
             </div>
             <div class="field"><label>Mobile No*:</label><input type="tel" id="mobile" pattern="[0-9]{10}" required></div>
-            <div class="field"><label>Ref. By:</label><input type="text" id="ref" placeholder="Self/Doctor"></div>
+            <div class="field"><label>Ref. By:</label><input type="text" id="ref" placeholder="Self"></div>
         </div>
 
         <table>
-            <thead><tr><th width="75%">Test Investigation</th><th width="25%" style="text-align:right;">Price (₹)</th></tr></thead>
+            <thead><tr><th width="75%">Investigation</th><th width="25%" style="text-align:right;">Price (₹)</th></tr></thead>
             <tbody id="testRows">
                 <tr class="row-empty">
                     <td>
                         <select class="test-select" onchange="fetchPrice(this)">
-                            <option value="" data-p="0">-- Choose Investigation --</option>
-                            <option value="CBC" data-p="500">Complete Blood Count (CBC)</option>
-                            <option value="LFT" data-p="850">Liver Function Test (LFT)</option>
-                            <option value="KFT" data-p="900">Kidney Function Test (KFT)</option>
-                            <option value="Lipid" data-p="1100">Lipid Profile</option>
-                            <option value="Thyroid" data-p="650">Thyroid Profile (T3, T4, TSH)</option>
-                            <option value="Sugar" data-p="150">Blood Sugar (Fast/PP)</option>
-                            <option value="Urine" data-p="200">Urine Routine</option>
+                            <option value="" data-p="0">-- Select Test --</option>
+                            <option value="CBC" data-p="500">CBC (Complete Blood Count)</option>
+                            <option value="LFT" data-p="850">LFT (Liver Function)</option>
+                            <option value="KFT" data-p="900">KFT (Kidney Function)</option>
+                            <option value="Sugar" data-p="150">Blood Sugar</option>
                         </select>
                     </td>
                     <td>
@@ -127,14 +117,14 @@
                 </tr>
             </tbody>
         </table>
-        <button type="button" class="no-print" onclick="addRow()" style="margin-top:12px; padding:6px 12px; border:1px solid #ccc; background:#fff; cursor:pointer; font-size:12px; border-radius:4px;">+ Add Investigation</button>
+        <button type="button" class="no-print" onclick="addRow()" style="margin-top:12px;">+ Add Test</button>
 
         <div class="summary-wrapper">
             <div class="summary-table">
                 <div class="sum-row"><span>Sub-Total:</span> <span>₹<span id="subTotal">0.00</span></span></div>
-                <div class="sum-row"><span>Discount:</span> <input type="number" id="disc" value="0" oninput="recalc()" style="width:70px; text-align:right; border:1px solid #eee;"></div>
-                <div class="sum-row"><span>Paid:</span> <input type="number" id="paid" value="0" oninput="recalc()" style="width:70px; text-align:right; border:1px solid #eee;"></div>
-                <div class="sum-row grand-total"><span>Due Amount:</span> <span>₹<span id="dueTotal">0.00</span></span></div>
+                <div class="sum-row"><span>Discount:</span> <input type="number" id="disc" value="0" oninput="recalc()" style="width:70px; text-align:right;"></div>
+                <div class="sum-row"><span>Paid:</span> <input type="number" id="paid" value="0" oninput="recalc()" style="width:70px; text-align:right;"></div>
+                <div class="sum-row grand-total"><span>Due:</span> <span>₹<span id="dueTotal">0.00</span></span></div>
             </div>
         </div>
     </form>
@@ -143,7 +133,9 @@
 <script>
     const START_SERIAL = 20262001;
     const G_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxIEoYaxV7C0ane_MOrEwZQGVgjGydGEJfkINjJIpmJGhus8k7XrocT9osWXxcg06K3bg/exec"; 
+    
     let currentActiveID = "";
+    let clockInterval;
 
     function updateFileName() {
         const pName = document.getElementById('name').value || "Guest";
@@ -172,16 +164,18 @@
         }
     }
 
+    function startLiveClock() {
+        updateClock();
+        clockInterval = setInterval(updateClock, 1000);
+    }
+
+    // Initialize
     generateInvoiceID();
-    updateClock();
-    const clockInterval = setInterval(updateClock, 1000);
+    startLiveClock();
 
     function fetchPrice(sel) {
         const row = sel.closest('tr');
         if (sel.value !== "") {
-            let matches = 0;
-            document.querySelectorAll('.test-select').forEach(s => { if(s.value === sel.value) matches++; });
-            if (matches > 1) { alert("Duplicate Test Selected."); sel.selectedIndex = 0; return; }
             row.classList.remove('row-empty');
         } else { row.classList.add('row-empty'); }
         row.querySelector('.price-display').value = sel.options[sel.selectedIndex].getAttribute('data-p');
@@ -234,38 +228,49 @@
             date: document.getElementById('curr-time').innerText
         };
 
-        // Local Save for History
-        let db = JSON.parse(localStorage.getItem('pdu_lab_final_db') || '[]');
+        // 1. Save locally for history
+        let db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
         db.push(record);
-        localStorage.setItem('pdu_lab_final_db', JSON.stringify(db));
+        localStorage.setItem('pdu_final_sync_db', JSON.stringify(db));
         localStorage.setItem('last_pdu_serial', currentActiveID.replace("PDU", ""));
 
-        // Cloud Backup (Google Sheets)
-        fetch(G_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(record) });
+        // 2. Send to Google Sheets
+        fetch(G_SCRIPT_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(record)
+        });
 
+        // 3. Print
         window.print();
+
+        // 4. AUTO RESET TO NEW BILL
+        setTimeout(() => {
+            location.reload(); 
+        }, 1000);
     }
 
     function runSearch() {
         const q = document.getElementById('searchQuery').value.toLowerCase();
-        const db = JSON.parse(localStorage.getItem('pdu_lab_final_db') || '[]');
-        const results = db.filter(r => r.name.toLowerCase().includes(q) || r.mob.includes(q) || r.id.toLowerCase().includes(q));
+        const db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
+        const res = db.filter(r => r.name.toLowerCase().includes(q) || r.mob.includes(q) || r.id.toLowerCase().includes(q));
         
-        let html = '<table style="width:100%; font-size:12px;"><tr><th>ID</th><th>Patient Name</th><th>Date</th><th>Action</th></tr>';
-        results.reverse().forEach(r => {
-            html += `<tr><td>${r.id}</td><td>${r.name}</td><td>${r.date.split('|')[0]}</td>
-            <td><button onclick='reprint("${r.id}")' style="background:#3498db; color:white; border:none; border-radius:3px; padding:3px 8px; cursor:pointer;">Reprint</button></td></tr>`;
+        let h = '<table style="width:100%; font-size:12px;"><tr><th>ID</th><th>Patient</th><th>Action</th></tr>';
+        res.reverse().forEach(r => {
+            h += `<tr><td>${r.id}</td><td>${r.name}</td><td><button onclick='reprint("${r.id}")'>Reprint</button></td></tr>`;
         });
-        document.getElementById('searchRes').innerHTML = results.length ? html + '</table>' : 'No records found.';
+        document.getElementById('searchRes').innerHTML = res.length ? h + '</table>' : 'No records.';
     }
 
     function reprint(id) {
-        const db = JSON.parse(localStorage.getItem('pdu_lab_final_db') || '[]');
+        const db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
         const d = db.find(r => r.id === id); if(!d) return;
 
         clearInterval(clockInterval);
         generateInvoiceID(d.id);
         updateClock(d.date);
+        
         document.getElementById('name').value = d.name;
         document.getElementById('age').value = d.age;
         document.getElementById('sex').value = d.sex;
@@ -292,7 +297,7 @@
     }
 
     function shareWhatsApp() {
-        const msg = `Patient: ${document.getElementById('name').value}\nID: ${currentActiveID}\nDue: ₹${document.getElementById('dueTotal').innerText}\nDiagnostic Care Lab.`;
+        const msg = `Patient: ${document.getElementById('name').value}\nID: ${currentActiveID}\nDue: ₹${document.getElementById('dueTotal').innerText}`;
         window.open(`https://wa.me/91${document.getElementById('mobile').value}?text=${encodeURIComponent(msg)}`, '_blank');
     }
 </script>
