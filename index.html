@@ -31,7 +31,12 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th { text-align: left; padding: 10px; background: #f8f9fa; font-size: 12px; border-bottom: 2px solid #333; text-transform: uppercase; }
         td { padding: 8px 10px; border-bottom: 1px solid #f1f1f1; position: relative; }
-        .test-select { width: 100%; border: 1px solid #eee; padding: 5px; border-radius: 4px; font-size: 13px; }
+        
+        /* Manual Entry Styling */
+        .test-input-group { display: flex; gap: 5px; width: 100%; }
+        .test-select { flex: 1; border: 1px solid #eee; padding: 5px; border-radius: 4px; font-size: 13px; }
+        .manual-test-input { flex: 1; border: 1px solid var(--accent-color); padding: 5px; border-radius: 4px; font-size: 13px; display: none; }
+        
         .price-display { border: none; background: transparent; width: 100%; font-weight: bold; font-size: 14px; text-align: right; }
 
         .summary-wrapper { display: flex; justify-content: flex-end; margin-top: 15px; }
@@ -52,7 +57,7 @@
             .no-print-zone, .btn-remove, .search-panel, .row-empty, button { display: none !important; }
             body { background: white; padding: 0; }
             .invoice-container { border: none; box-shadow: none; margin: 0; width: 100%; height: auto; }
-            .field input, .field select, .test-select { border: none !important; appearance: none; pointer-events: none; color: #000 !important; }
+            .field input, .field select, .test-select, .manual-test-input { border: none !important; appearance: none; pointer-events: none; color: #000 !important; }
             .field { border-bottom: 1px dashed #ccc; }
         }
     </style>
@@ -102,22 +107,26 @@
             <tbody id="testRows">
                 <tr class="row-empty">
                     <td>
-                        <select class="test-select" onchange="fetchPrice(this)">
-                            <option value="" data-p="0">-- Select Test --</option>
-                            <option value="CBC" data-p="500">CBC (Complete Blood Count)</option>
-                            <option value="LFT" data-p="850">LFT (Liver Function)</option>
-                            <option value="KFT" data-p="900">KFT (Kidney Function)</option>
-                            <option value="Sugar" data-p="150">Blood Sugar</option>
-                        </select>
+                        <div class="test-input-group">
+                            <select class="test-select" onchange="handleTestChange(this)">
+                                <option value="" data-p="0">-- Select Test --</option>
+                                <option value="CBC" data-p="500">CBC (Complete Blood Count)</option>
+                                <option value="LFT" data-p="850">LFT (Liver Function)</option>
+                                <option value="KFT" data-p="900">KFT (Kidney Function)</option>
+                                <option value="Sugar" data-p="150">Blood Sugar</option>
+                                <option value="MANUAL" style="color:var(--accent-color); font-weight:bold;">+ Add Manual Test</option>
+                            </select>
+                            <input type="text" class="manual-test-input" placeholder="Type Test Name..." oninput="recalc()">
+                        </div>
                     </td>
                     <td>
-                        <input type="number" class="price-display" value="0" readonly>
+                        <input type="number" class="price-display" value="0" oninput="recalc()">
                         <button type="button" class="btn-remove no-print" onclick="removeRow(this)">✖</button>
                     </td>
                 </tr>
             </tbody>
         </table>
-        <button type="button" class="no-print" onclick="addRow()" style="margin-top:12px;">+ Add Test</button>
+        <button type="button" class="no-print" onclick="addRow()" style="margin-top:12px;">+ Add Next Row</button>
 
         <div class="summary-wrapper">
             <div class="summary-table">
@@ -132,10 +141,33 @@
 
 <script>
     const START_SERIAL = 20262001;
-    const G_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqHZoI5kCUi7hUFZPvrjbhhKTf6HcgV6Yo9QMgKXVn/dev"; 
+    const G_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzqHZoI5kCUi7hUFZPvrjbhhKTf6HcgV6Yo9QMgKXVn/exec"; 
     
     let currentActiveID = "";
     let clockInterval;
+
+    function handleTestChange(sel) {
+        const row = sel.closest('tr');
+        const manualInput = row.querySelector('.manual-test-input');
+        const priceInput = row.querySelector('.price-display');
+
+        if (sel.value === "MANUAL") {
+            sel.style.display = "none";
+            manualInput.style.display = "block";
+            manualInput.focus();
+            priceInput.readOnly = false; // Allow manual price for manual tests
+            priceInput.value = "";
+            row.classList.remove('row-empty');
+        } else if (sel.value !== "") {
+            priceInput.value = sel.options[sel.selectedIndex].getAttribute('data-p');
+            priceInput.readOnly = true;
+            row.classList.remove('row-empty');
+        } else {
+            row.classList.add('row-empty');
+            priceInput.value = 0;
+        }
+        recalc();
+    }
 
     function updateFileName() {
         const pName = document.getElementById('name').value || "Guest";
@@ -172,20 +204,16 @@
     generateInvoiceID();
     startLiveClock();
 
-    function fetchPrice(sel) {
-        const row = sel.closest('tr');
-        if (sel.value !== "") {
-            row.classList.remove('row-empty');
-        } else { row.classList.add('row-empty'); }
-        row.querySelector('.price-display').value = sel.options[sel.selectedIndex].getAttribute('data-p');
-        recalc();
-    }
-
     function addRow() {
         const row = document.querySelector('#testRows tr').cloneNode(true);
         row.classList.add('row-empty');
         row.querySelector('.price-display').value = 0;
-        row.querySelector('.test-select').selectedIndex = 0;
+        row.querySelector('.price-display').readOnly = true;
+        const sel = row.querySelector('.test-select');
+        sel.selectedIndex = 0;
+        sel.style.display = "block";
+        row.querySelector('.manual-test-input').style.display = "none";
+        row.querySelector('.manual-test-input').value = "";
         document.getElementById('testRows').appendChild(row);
         return row;
     }
@@ -209,7 +237,12 @@
 
         const tests = [];
         document.querySelectorAll('#testRows tr:not(.row-empty)').forEach(r => {
-            tests.push({v: r.querySelector('.test-select').value, p: r.querySelector('.price-display').value});
+            const sel = r.querySelector('.test-select');
+            const manual = r.querySelector('.manual-test-input');
+            const testName = (sel.value === "MANUAL") ? manual.value : sel.value;
+            if(testName) {
+                tests.push({v: testName, p: r.querySelector('.price-display').value});
+            }
         });
 
         const record = {
@@ -227,34 +260,30 @@
             date: document.getElementById('curr-time').innerText
         };
 
-        // 1. Local History
+        // 1. Local Storage
         let db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
         db.push(record);
         localStorage.setItem('pdu_final_sync_db', JSON.stringify(db));
         localStorage.setItem('last_pdu_serial', currentActiveID.replace("PDU", ""));
 
         // 2. Cloud Sync
-        fetch(G_SCRIPT_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(record)
-        });
+        try {
+            await fetch(G_SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(record)
+            });
+        } catch (err) { console.log("Sync Error"); }
 
-        // 3. Print
         window.print();
-
-        // 4. Auto-Reset to New Bill after print
-        setTimeout(() => {
-            location.reload(); 
-        }, 800);
+        setTimeout(() => { location.reload(); }, 1000);
     }
 
     function runSearch() {
         const q = document.getElementById('searchQuery').value.toLowerCase();
         const db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
         const res = db.filter(r => r.name.toLowerCase().includes(q) || r.mob.includes(q) || r.id.toLowerCase().includes(q));
-        
         let h = '<table style="width:100%; font-size:12px;"><tr><th>ID</th><th>Patient</th><th>Action</th></tr>';
         res.reverse().forEach(r => {
             h += `<tr><td>${r.id}</td><td>${r.name}</td><td><button onclick='reprint("${r.id}")'>Reprint</button></td></tr>`;
@@ -265,25 +294,37 @@
     function reprint(id) {
         const db = JSON.parse(localStorage.getItem('pdu_final_sync_db') || '[]');
         const d = db.find(r => r.id === id); if(!d) return;
-
         clearInterval(clockInterval);
         generateInvoiceID(d.id);
         updateClock(d.date);
-        
         document.getElementById('name').value = d.name;
         document.getElementById('age').value = d.age;
         document.getElementById('sex').value = d.sex;
         document.getElementById('mobile').value = d.mob;
         document.getElementById('ref').value = d.ref;
-
         const tbody = document.getElementById('testRows');
         tbody.innerHTML = "";
         d.tests.forEach(t => {
             const r = addRow(); r.classList.remove('row-empty');
-            r.querySelector('.test-select').value = t.v;
-            r.querySelector('.price-display').value = t.p;
+            const sel = r.querySelector('.test-select');
+            const man = r.querySelector('.manual-test-input');
+            const pri = r.querySelector('.price-display');
+            
+            // Logic to check if it was a manual test
+            let exists = false;
+            for(let i=0; i<sel.options.length; i++){
+                if(sel.options[i].value === t.v) { exists = true; break; }
+            }
+            if(exists) {
+                sel.value = t.v;
+            } else {
+                sel.style.display = "none";
+                man.style.display = "block";
+                man.value = t.v;
+                pri.readOnly = false;
+            }
+            pri.value = t.p;
         });
-
         document.getElementById('disc').value = d.disc;
         document.getElementById('paid').value = d.paid;
         recalc();
@@ -302,4 +343,3 @@
 </script>
 </body>
 </html>
-
